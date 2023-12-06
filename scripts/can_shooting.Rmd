@@ -1,0 +1,887 @@
+---
+title: "Exploring Iconic Prosody and Sensorimotor Properties"
+author: "Aleksandra Ćwiek & Susanne Fuchs"
+date: "2023-12-04"
+output:
+  html_document:
+    number_sections: yes
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+    df_print: paged
+  pdf_document:
+    number_sections: yes
+    toc: yes
+    toc_depth: '3'
+  html_notebook:
+    number_sections: yes
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Set up and load in data
+
+```{r folders and packages, echo=TRUE, message=FALSE, warning=FALSE}
+# Set the script's path as working directory
+parentfolder = rstudioapi::getActiveDocumentContext()$path 
+setwd(dirname(parentfolder))
+parentfolder <- dirname(getwd())
+
+data          <- paste0(parentfolder, '/data/')
+models        <- paste0(parentfolder, '/models/')
+plots         <- paste0(parentfolder, '/plots/')
+scripts       <- paste0(parentfolder, '/scripts/')
+
+# Load in packages
+library(tidyverse) # data wrangling
+library(gridExtra) # plots side by side
+library(iemisc) # for acosd, which gives inverse cosine in degrees (standard in R is radians)
+library(broom) # for tidy model outputs
+library(brms)
+# option for Bayesian regression models:
+# use all available cores for parallel computing
+options(mc.cores = parallel::detectCores())
+library(HDInterval) # package for credible interval computation
+library(tidybayes) # plotting
+library(phonR) # for formant plots
+
+# Use a colorblind-friendly palette
+colorBlindBlack8  <- c("#000000", "#E69F00", "#56B4E9", "#009E73", 
+                       "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+```
+
+Load data:
+
+```{r load data, message=FALSE, warning=FALSE}
+can = read_delim(paste0(data,'vowels-only.txt'), delim = '\t', col_names = TRUE, na = "NA")
+```
+
+Remove columns that are repetitive:
+
+```{r remove columns, message=FALSE, warning=FALSE}
+can <- can %>%
+  select(-file, -sound.name, -Fs, -gender)
+```
+
+# Background on the data and analysis
+
+## Method
+
+Participants stand in front of a wall (approx. 1m distance) and are asked to shoot a can appearing on the wall. They should shoot it with a laser pointer by pointing the laser at the can, while uttering the word appearing on the can (piff\|paff) at the same time. The can appears on different positions -- on the 5x5 grid -- and in two different sizes.
+
+Combinations: 25 positions x 2 sizes x 2 words/vowels; N = 100 items per participant.
+
+Overall duration ca. 10 minutes.
+
+Marker coding:
+
+-   rg - right glasses
+-   mg - mid glasses
+-   lg - left glasses
+-   ul - upper lip
+-   jaw - lower lip/jaw
+-   rw - right wrist
+-   re - right elbow
+-   rs - right shoulder
+-   lw - left wrist
+-   le - left elbow
+-   ls - left shoulder
+-   pointer - laser pointer
+-   f - front chest
+-   c7 - c7
+-   b - back chest
+
+## Hypotheses
+
+Both hypotheses are grounded in the human body and seek to explain iconic prosody with physiological relationships.
+
+1.  Fundamental frequency is influenced by head position, specifically, that the more upward the head is rotated, the higher the fundamental frequency.
+
+    This hypothesis aims to investigate the missing link between the vertical position of an object and *f*0, and whether an upward-looking head position can drive the cross-modal iconic effect. We expect to find a change in *f*0 due to head movement since moving the head upwards engages the muscles around the larynx, which are responsible for *f*0 change.
+
+2.  The degree of jaw opening is influenced by the size of an object being named, with a larger object resulting in a larger degree of jaw opening.
+
+    Jaw opening is a physical factor that affects F1, and as such, it is used as the primary measurement in this study to assess the anatomical basis for iconicity. The relationship between F1 and object size has been demonstrated in speech perception, with a higher F1 perceived as coming from a larger source. However, this relationship has yet to be tested from the perspective of speech production.
+
+## Explain variables
+
+The columns in the raw data file represent the following variables:
+
+-   *subject*: participant number (total before exclusions = 31)
+-   *condition*: this is a code that contains can size, vowel, vertical and horizontal pose together
+-   *part*: the experiment was divided in two parts and this column contains this information
+-   *size*: the size of the can stimulus (large vs. small)
+-   *v.pos*: vertical position from 1 (top) to 5 (bottom)
+-   *h.pos*: horizontal position from 1 (leftmost) to 5 (rightmost)
+-   *text*: vowel segment ([ɪ] vs. [a])
+-   *start*, *end*, *duration*: beginning, end, duration of the vowel segment
+-   *overall_dB*: mean intensity in dB
+-   *min_f0*, *max_f0*, *mean_f0*: min, max, mean *f*0 within the vowel segment
+-   *X50_F1*, *X50_F2*, *X50_F3*: first, second, third formant of the vowel interval, measured at the midpoint of the interval
+-   *dataset*: which pre-randomized presentation was used (1--5)
+-   *age*: age of the participant
+-   *height*: self-reported height of the participant
+-   *hand*: self-reported handedness
+-   *monolingual*: binary variable of the participant was monolingual
+-   *x_mg_mean*, *y_mg_mean*, *z_mg_mean*: three-dimensional coordinates of the point in the middle of the glasses (between the eyes; used to control for head tilt)
+-   *x_f_mean*, *y_f_mean*, *z_f_mean*: three-dimensional coordinates of the point on the front of participant's body (on the sternum; used as a reference point)
+-   *x_rw_mean*, *y_rw_mean*, *z_rw_mean*: three-dimensional coordinates of the right wrist (used to control for hand movement)
+-   *x_c7_mean*, *y_c7_mean*, *z_c7_mean*: three-dimensional coordinates of the point on the back of participant's body (roughly on the 7th cervical vertebrae; used as a reference point)
+-   *samplingRate*: sampling rate of the motion capture system
+-   *TimeMaxLip*: time stamp of the maximal lip distance
+-   *LipDist*: maximal lip distance within the vowel interval in centimeters (markers were placed on top of the upper and below the lower lip)
+
+# Beginning of analysis
+
+Here begins the actual data analysis.
+
+## Data preparation
+
+Calculate distances in 3D:
+
+```{r distances, echo=TRUE, message=FALSE, warning=FALSE}
+can <- mutate(can,
+              dist.mg.f.3d = sqrt((x_f_mean - x_mg_mean)^2 + (y_f_mean - y_mg_mean)^2 + (z_f_mean - z_mg_mean)^2), # mid glasses to front
+              dist.f.c7.3d = sqrt((x_c7_mean - x_f_mean)^2 + (y_c7_mean - y_f_mean)^2 + (z_c7_mean - z_f_mean)^2), # front to back
+              dist.c7.mg.3d = sqrt((x_mg_mean - x_c7_mean)^2 + (y_mg_mean - y_c7_mean)^2 + (z_mg_mean - z_c7_mean)^2)) # back to mid glasses
+```
+
+Calculate angles in 3D:
+
+```{r angles, echo=TRUE, message=FALSE, warning=FALSE}
+can <- mutate(can,
+              angle.mg.3d = acosd((dist.c7.mg.3d^2 + dist.mg.f.3d^2 - dist.f.c7.3d^2) / (2 * dist.c7.mg.3d * dist.mg.f.3d)), # mid glasses
+              angle.f.3d = acosd((dist.mg.f.3d^2 + dist.f.c7.3d^2 - dist.c7.mg.3d^2) / (2 * dist.mg.f.3d * dist.f.c7.3d)), # front
+              angle.c7.3d = acosd((dist.f.c7.3d^2 + dist.c7.mg.3d^2 - dist.mg.f.3d^2) / (2 * dist.f.c7.3d * dist.c7.mg.3d))) # back -- I use this one as this is the most stable point on the body
+```
+
+Select only necessary columns and rename them:
+
+```{r}
+can <- can %>%
+  mutate(
+    f0_range = max_f0 - min_f0
+    ) %>%
+  select(
+    subject, part, size, v.pos, h.pos, text, start, duration, 
+    overall_dB, f0_range, mean_f0, X50_F1, X50_F2, X50_F3, 
+    height, dataset, y_mg_mean, LipDist, angle.c7.3d
+    ) %>%
+  rename(
+    speaker = subject,
+    can_size = size,
+    v_pos = v.pos,
+    h_pos = h.pos,
+    vowel = text,
+    dB_mean = overall_dB,
+    f0_mean = mean_f0,
+    F1 = X50_F1,
+    F2 = X50_F2,
+    F3 = X50_F3,
+    head_pos = y_mg_mean,
+    angle = angle.c7.3d,
+    lip_dist = LipDist) 
+```
+
+Look at the data now:
+
+```{r}
+can
+```
+
+## Remove measure errors
+
+We do not remove outliers, as they may be valuables data points. However, we should remove erroneous measurements.
+
+With speaker 16, we forgot to turn on the right microphone, therefore, the data is not trustworthy and we are forced to remove it.
+
+```{r}
+can <- subset(can, speaker != '16')
+```
+
+Pätzold and Simpson ([1997, 225](https://www.ipds.uni-kiel.de/kjk/pub_exx/aipuk32/mpas.pdf)) give the following formant values in read speach of female speakers for the vowels in question:
+
+|     |                |                   |                   |
+|-----|----------------|-------------------|-------------------|
+|     | F1             | F2                | F3                |
+| [ɪ] | 391 (350--442) | 2136 (1905--2348) | 2867 (2660--3026) |
+| [a] | 751 (651--838) | 1460 (1346--1583) | 2841 (2679--2983) |
+
+We decided to group the data per participant and per vowel and, within the grouped data, remove outliers individually for *f*0 range, *f*0 mean, *f*1, *f*2, and *f*3.
+
+```{r}
+# Columns to process
+columns_to_process <- c("dB_mean", "f0_range", "f0_mean", "F1", "F2", "F3")
+
+# Group by Language and Participant and then loop through each column
+can_grouped <- can %>%
+  group_by(speaker, vowel) %>%
+  mutate(across(all_of(columns_to_process), .fns = ~{
+    cat("Processing column:", deparse(substitute(.)), "\n")
+    
+    # Calculate IQR
+    Q1 <- quantile(.x, 0.25, na.rm = TRUE)
+    Q3 <- quantile(.x, 0.75, na.rm = TRUE)
+    IQR <- Q3 - Q1
+    
+    # Define lower and upper bounds for outliers
+    lower_bound <- Q1 - 2 * IQR
+    upper_bound <- Q3 + 2 * IQR
+    
+    # Identify outliers
+    outliers <- .x < lower_bound | .x > upper_bound
+    
+    # Replace outliers with NA
+    .x[outliers] <- NA
+    .x
+  })) %>% 
+  ungroup()
+```
+
+Check how the outlier removal impacted the data. First, the amount of NAs.
+
+```{r}
+# Combine the results into a data frame
+na_summary <- data.frame(
+  NA_Count_Pre_Removal = colSums(is.na(can[, columns_to_process])),
+  NA_Count_Post_Removal = colSums(is.na(can_grouped[, columns_to_process])),
+  NA_Perc_Pre_Removal = (colSums(is.na(can[, columns_to_process])) / nrow(can)) * 100,
+  NA_Perc_Post_Removal = (colSums(is.na(can_grouped[, columns_to_process])) / nrow(can_grouped)) * 100
+)
+
+na_summary
+```
+
+Then, look at the means. When looking at the table, it's best to sort by speaker to see where there was a change.
+
+```{r}
+# Calculate means for each variable in the pre-removal dataset
+means_can <- can %>%
+  group_by(speaker, vowel) %>%
+  summarise(across(all_of(columns_to_process), mean, na.rm = TRUE)) %>% 
+  ungroup()
+
+# Calculate means for each variable in the post-removal dataset
+means_can_grouped <- can_grouped %>%
+  group_by(speaker, vowel) %>%
+  summarise(across(all_of(columns_to_process), mean, na.rm = TRUE)) %>% 
+  ungroup()
+
+# Combine the means into a single summary table
+outlier_summary <- bind_rows(
+  tibble(Variable = "Pre-Removal", means_can),
+  tibble(Variable = "Post-Removal", means_can_grouped)
+)
+```
+
+After inspecting the outlier removal, change the name back to can and remove the unnecessary data frames.
+
+```{r}
+can <- can_grouped
+rm(can_grouped, means_can, means_can_grouped)
+rm(columns_to_process)
+```
+
+## Adding z-scores for plotting
+
+### Phonetic variables
+
+```{r, message = FALSE}
+# Create tibble with means and sd per speaker and vowel:
+can %>%
+  na.omit() %>%
+  group_by(speaker, vowel) %>%
+  summarize_at(vars(dB_mean, f0_mean, f0_range, F1, F2, F3), list(mean = mean, sd = sd)) %>%
+  ungroup() %>%
+  {. ->> speakers_phon}
+
+# Join tibble with means per speaker and vowel
+can <- can %>%
+  left_join(speakers_phon, by = c("speaker", "vowel")) %>%
+  # Calculate z-scores
+  mutate(
+    db_mean_z = (dB_mean - dB_mean_mean) / dB_mean_sd,
+    f0_mean_z = (f0_mean - f0_mean_mean) / f0_mean_sd,
+    f0_range_z = (f0_range - f0_range_mean) / f0_range_sd,
+    F1_z = (F1 - F1_mean) / F1_sd,
+    F2_z = (F2 - F2_mean) / F2_sd,
+    F3_z = (F3 - F3_mean) / F3_sd
+  ) %>%
+  # Deselect unneeded variables
+  select(-c(
+    dB_mean_sd, dB_mean_mean,
+    f0_mean_sd, f0_mean_mean,
+    f0_range_sd, f0_range_mean,
+    F1_sd, F1_mean,
+    F2_sd, F2_mean,
+    F3_sd, F3_mean
+  ))
+```
+
+### Kinematic variables
+
+```{r, message = FALSE}
+# Create tibble with means and sd per speaker and vowel for head_pos, lip_dist, and angle:
+can %>%
+  na.omit() %>%
+  group_by(speaker, vowel) %>%
+  summarize_at(vars(head_pos, lip_dist, angle), list(mean = mean, sd = sd)) %>%
+  ungroup() %>%
+  {. ->> speakers_kin}
+
+# Join tibble with means per speaker and vowel
+can <- can %>%
+  left_join(speakers_kin, by = c("speaker", "vowel")) %>%
+  # Calculate z-scores
+  mutate(
+    head_pos_z = (head_pos - head_pos_mean) / head_pos_sd,
+    lip_dist_z = (lip_dist - lip_dist_mean) / lip_dist_sd,
+    angle_z = (angle - angle_mean) / angle_sd
+  ) %>%
+  # deselect unneeded variables
+  select(-c(
+    head_pos_sd, head_pos_mean,
+    lip_dist_sd, lip_dist_mean,
+    angle_sd, angle_mean
+  ))
+```
+
+## Group movers
+
+People differ in the SD of the head position and thus head angle. This suggests there are some who move their head more, and some who move their head less.
+
+The idea is to group speakers into movers and non-movers by looking at the SD of the mean head angle:
+
+```{r}
+can %>% 
+  group_by(speaker) %>%
+  summarize_at(vars(angle), list(mean = mean, sd = sd))%>% 
+  {. ->> speakers_angle} %>% 
+  ungroup() %>% 
+  print(n = Inf)
+```
+
+Check mean of SD to estimate point of division:
+
+```{r}
+mean(speakers_angle$sd)
+```
+
+Group of movers with SD above 2.5:
+
+```{r}
+filter(speakers_angle, sd > 2.5)
+```
+
+N = 13
+
+Group of non-movers with SD below 2.5:
+
+```{r}
+filter(speakers_angle, sd < 2.5)
+```
+
+N = 17
+
+Add a categorical variable mover/non-mover:
+
+```{r, message = FALSE}
+can <- left_join(can,
+                    can %>% 
+                      group_by(speaker) %>%
+                      summarize_at(vars(angle), list(mean_angle = mean, sd_angle = sd)) %>% 
+                      mutate(mover = ifelse(sd_angle < 2.5, 'no', 'yes')) %>%
+                      ungroup())
+```
+
+Calculate the difference between the actual angle and the speaker's mean to plot it later:
+
+```{r}
+can <- can %>% 
+  mutate(angle_difference = angle - mean_angle) %>% 
+  select(-c(sd_angle, mean_angle)) # deselect unneded variables
+```
+
+## Prepare formants
+
+### Transform to bark
+
+NAs are problematic for phonR, therefore I'm replacing them with a placeholder value
+
+```{r}
+can_noNA <- can %>%
+  mutate(across(c(F1, F2, F3), ~ifelse(is.na(.), 9999, .)))
+```
+
+Add bark (= another type of normalized scale) values for formants
+
+```{r}
+can_noNA <- mutate(can_noNA,
+              F1_bark = normBark(F1),
+              F2_bark = normBark(F2),
+              F3_bark = normBark(F3))
+```
+
+Replace back the placeholder value with NAs for formants in herzt and also replace the respective cells of formants transofrmed to bark to NA.
+
+```{r}
+can_noNA <- mutate(can_noNA,
+                    across(c(F1, F2, F3), ~ifelse(. == 9999, NA, .)),
+                    across(c(F1_bark, F2_bark, F3_bark), 
+                           ~ifelse(is.na(get(substring(cur_column(), 1, 2))), NA, .)))
+
+can <- can_noNA
+rm(can_noNA)
+```
+
+### Calculate distances
+
+We have to create a data frame where can sizes are aside each other for each condition to be able to calculate the distances.
+
+```{r}
+# Pivot the data to create separate columns for each variable and category
+can_formants_aside <- can %>%
+  pivot_wider(
+    id_cols = c(speaker, vowel, v_pos, h_pos),
+    names_from = can_size,
+    values_from = c(F1, F2, F3, lip_dist, F1_z, F2_z, F3_z, F1_bark, F2_bark, F3_bark),
+    names_sep = "_"
+  ) %>%
+  # Rename columns for clarity
+  rename(
+    F1_large = F1_large,
+    F1_small = F1_small,
+    F2_large = F2_large,
+    F2_small = F2_small,
+    F3_large = F3_large,
+    F3_small = F3_small,
+    lip_dist_large = lip_dist_large,
+    lip_dist_small = lip_dist_small,
+    F1_z_large = F1_z_large,
+    F1_z_small = F1_z_small,
+    F2_z_large = F2_z_large,
+    F2_z_small = F2_z_small,
+    F3_z_large = F3_z_large,
+    F3_z_small = F3_z_small,
+    F1_bark_large = F1_bark_large,
+    F1_bark_small = F1_bark_small,
+    F2_bark_large = F2_bark_large,
+    F2_bark_small = F2_bark_small,
+    F3_bark_large = F3_bark_large,
+    F3_bark_small = F3_bark_small
+  )
+
+# View the resulting dataframe
+print(can_formants_aside)
+```
+
+Calculate Euclidean distance between large and small can formants in the same condition:
+
+```{r}
+can_formants_aside <- mutate(can_formants_aside,
+  dist_size_hz = sqrt((F1_large - F1_small)^2 + (F2_large - F2_small)^2),
+  dist_size_z = sqrt((F1_z_large - F1_z_small)^2 + (F2_z_large - F2_z_small)^2),
+  dist_size_bark = sqrt((F1_bark_large - F1_bark_small)^2 + (F2_bark_large - F2_bark_small)^2)
+)
+```
+
+# Initial descriptive statistics
+
+How many speakers?
+
+```{r}
+length(unique(can$speaker))
+```
+
+How many unique realizations per speaker?
+
+```{r}
+can %>%
+  group_by(speaker) %>%
+  summarize(num_unique_realizations = n_distinct(paste(can_size, v_pos, h_pos, vowel))) %>%
+  ungroup() %>%
+  print(n = 30)
+```
+
+NAs in variables per speaker.
+
+```{r}
+can %>%
+  group_by(speaker) %>%
+  summarize(
+    across(c(dB_mean, f0_mean, f0_range, F1, F2, F3, head_pos, lip_dist, angle),
+           ~sum(is.na(.))),
+    .groups = 'drop'
+  ) %>%
+  print(n = 30)
+```
+
+Because each participant had a total of 100 trials, these values are also percentages. There is quite some imbalance in the missing values. It's worth to keep that in mind and definitely allow for individual variance by speaker in the model.
+
+Check means of phonetic variables per speaker:
+
+```{r}
+print(speakers_phon, n = 60)
+```
+
+Check means of kinematic variables per speaker:
+
+```{r}
+print(speakers_kin, n = 60)
+```
+
+# Head position
+
+Here, I will start separating the two analyses for clarity purposes. We begin with the first hypothesis that proposes that fundamental frequency is influenced by head position, specifically, that the more upward the head is rotated, the higher the fundamental frequency.
+
+## Head position vs. angle
+
+While head position is unidimensional, angle covers movement across three dimensions. We have to choose which of them we will take for the analysis.
+
+First, let's check their correlation in classical terms.
+
+```{r}
+cor.test(can$angle, can$head_pos)
+# what will happen if we use z-normalized values
+cor.test(can$angle_z, can$head_pos_z)
+# the correlation skyrocketed! but it was there anyway
+```
+
+Plotting the raw values...
+
+```{r}
+ggplot(can,
+       aes(x = head_pos,
+           y = angle)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(size = 1, 
+              method = lm, 
+              se = F)
+```
+
+and now the z-scored.
+
+```{r}
+ggplot(can,
+       aes(x = head_pos_z,
+           y = angle_z)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(size = 1, 
+              method = lm, 
+              se = F)
+```
+
+So we cannot use both, but pick one. I am logically tending to pick angle because of larger dimensionality. However, higher dimensionality introduces degrees of freedom.
+
+```{r}
+# Plot for head_pos vs f0_mean_z
+f0_head_pos <- ggplot(can,
+       aes(x = f0_mean_z,
+           y = head_pos_z)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(size = 1, 
+              method = lm, 
+              se = FALSE) +
+  labs(title = "Head position vs f0 mean")
+
+# Plot for angle vs f0_mean_z
+f0_angle <- ggplot(can,
+       aes(x = f0_mean_z,
+           y = angle_z)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(size = 1, 
+              method = lm, 
+              se = FALSE) +
+  labs(title = "Angle vs f0 mean")
+
+# Arrange plots side by side
+grid.arrange(f0_head_pos, f0_angle, ncol = 2)
+```
+
+Visually, they are basically the same. I think it is better to go with angle then.
+
+## Bayesian modeling
+
+Here, I'm computing a model that estimates the probability of an effect of head position (among others) on *f*0. The first iteration of this analysis was done with the help of Timo Roettger. Since then, however, the analysis has been upgraded with the comments of three anonymous reviewers and Bodo Winter.
+
+------------------------------------------------------------------------
+
+### Contrast-code
+
+Contrast code vowel, can_size, and mover (the latter just in case) and store as separate vectors:
+
+```{r}
+can <- can %>%
+  mutate(
+    vowel_s = if_else(vowel == "I", -0.5, 0.5),
+    can_size_s = if_else(can_size == "small", -0.5, 0.5),
+    mover_s = if_else(mover == "no", -0.5, 0.5)
+  )
+```
+
+### Priors
+
+We can expect *f*0 **not** to be normally distributed. However, if we use some kind of normalization for the outcome variable, like z-scoring, we cannot fit group-level effects by participant (thanks for this insight to Stefano Coretta!). I will use a lognormal family for the model. Therefore, we must think of the priors on the log scale.
+
+We will fit an intercept-only model for comparison, a model without random slopes and intercepts, and a maximal model. First, we inspect the priors we must specify for each model. Then, we will specify the priors separately.
+
+For each model, I will fit weakly informative priors. 
+
+#### Intercept-only
+
+```{r}
+get_prior(formula = f0_mean ~ 1,
+          data = can,
+          family = lognormal())
+```
+
+Let's find a weakly informative prior
+
+```{r}
+# If we assume that the mean for f0 is 200
+log(200)
+
+# If we set the prior to normal(0,1), what would be the boundaries
+exp(log(200)-0.5); exp(log(200)+0.5)
+
+# If we set the prior to normal(0,2), what would be the boundaries
+exp(log(200)-1); exp(log(200)+1)
+
+# If we set the prior to normal(0,3), what would be the boundaries
+exp(log(200)-1.5); exp(log(200)+1.5)
+
+# I think that for (0,3) we can safely assume to respect all datapoints. This will be the prior we choose for the intercept.
+```
+
+Define priors for the intercept-only model
+
+```{r}
+priors_intOnlyH1 <- c(
+  prior('normal(0, 3)', class = 'Intercept')
+)
+```
+
+#### No random slopes
+
+```{r}
+get_prior(formula = f0_mean ~ 1 + vowel_s + can_size_s + angle + h_pos + v_pos + height +
+            (1 | speaker),
+          data = can,
+          family = lognormal())
+```
+
+We don't have specific predictions about the magnitude of the specific effects. Most importantly we do not want to constrain any possible effect.
+
+```{r}
+priors_noRandomH1 <- c(
+  prior('normal(0, 3)', class = 'Intercept'),
+  prior('normal(0, 1)', class = b)
+)
+```
+
+#### Maximal model
+
+```{r}
+get_prior(formula = f0_mean ~ 1 + vowel_s + can_size_s + angle + h_pos + v_pos + height +
+            (1 + vowel_s + can_size_s + head_pos + h_pos + v_pos || speaker),
+          data = can,
+          family = lognormal())
+```
+
+I will not specify any priors for the group-level effects.
+
+```{r}
+priors_maxH1 <- c(
+  prior('normal(0, 3)', class = 'Intercept'),
+  prior('normal(0, 1)', class = b)
+)
+```
+
+### Fit models
+
+#### Intercept-only
+
+```{r}
+mdl_intOnlyH1 <- brm(f0_mean ~ 1,
+                   data = can,
+                   prior = priors_intOnlyH1,
+                   family = lognormal(),
+                   backend = "cmdstanr",
+                   cores = 4,
+                   chains = 4,
+                   iter = 4000,
+                   warmup = 2000,
+                   seed = 998,
+                   control = list(max_treedepth = 13,
+                                  adapt_delta = 0.99),
+                   file = paste0(models, "mdl_intOnlyH1.rds"))
+
+# if we need to compress the model more
+#saveRDS(mdl_intOnlyH1, file = paste0(models, "mdl_intOnlyH1.rds"), compress = "xz")
+
+mdl_intOnlyH1 <- readRDS(paste0(models, "mdl_intOnlyH1.rds"))
+```
+
+Let’s check how it looks like.
+
+```{r}
+summary(mdl_intOnlyH1)
+```
+
+
+```{r}
+plot(mdl_intOnlyH1)
+```
+
+
+```{r}
+pp_check(mdl_intOnlyH1, ndraws = 100)
+```
+
+The pp_check shows a slight right-skew and a "bump" around 200 Hz.
+
+Let’s compute the loo for model comparison.
+
+```{r}
+# run loo mdl
+if (file.exists(paste0(models, "mdl_intOnlyH1_loo.rds"))) {
+  mdl_intOnlyH1_loo <- readRDS(paste0(models, "mdl_intOnlyH1_loo.rds"))
+} else {
+  mdl_intOnly_loo <- loo(mdl_intOnly)
+  saveRDS(mdl_intOnlyH1_loo, paste0(models, "mdl_intOnlyH1_loo.rds"))
+}
+```
+
+#### No random slopes
+
+```{r}
+mdl_noRandomH1 <- brm(f0_mean ~ 1 + vowel_s + can_size_s + 
+                      angle + h_pos + v_pos + height +
+                      (1 | speaker),
+                   data = can,
+                   prior = priors_noRandomH1,
+                   family = lognormal(),
+                   backend = "cmdstanr",
+                   cores = 4,
+                   chains = 4,
+                   iter = 4000,
+                   warmup = 2000,
+                   seed = 998,
+                   control = list(max_treedepth = 13,
+                                  adapt_delta = 0.99),
+                   file = paste0(models, "mdl_noRandomH1.rds"))
+
+# if we need to compress the model more
+#saveRDS(mdl_noRandomH1, file = paste0(models, "mdl_noRandomH1.rds"), compress = "xz")
+
+mdl_noRandomH1 <- readRDS(paste0(models, "mdl_noRandomH1.rds"))
+```
+
+Let’s check how it looks like.
+
+```{r}
+summary(mdl_noRandomH1)
+```
+
+
+```{r}
+plot(mdl_noRandomH1)
+```
+
+
+```{r}
+conditional_effects(mdl_noRandomH1, sample_prior = "only")
+```
+
+
+```{r}
+pp_check(mdl_noRandomH1, ndraws = 100)
+```
+
+Let’s compute the loo for model comparison.
+
+```{r}
+# run loo mdl
+if (file.exists(paste0(models, "mdl_noRandomH1_loo.rds"))) {
+  mdl_noRandomH1_loo <- readRDS(paste0(models, "mdl_noRandomH1_loo.rds"))
+} else {
+  mdl_noRandomH1_loo <- loo(mdl_noRandomH1)
+  saveRDS(mdl_noRandomH1_loo, paste0(models, "mdl_noRandomH1_loo.rds"))
+}
+```
+
+#### Maximal model
+
+```{r}
+mdl_maxH1 <- brm(f0_mean ~ 1 + vowel_s + can_size_s + 
+                      angle + h_pos + v_pos + height +
+                      (1 + vowel_s + can_size_s + 
+                         angle + h_pos + v_pos || speaker),
+                   data = can,
+                   prior = priors_maxH1,
+                   family = lognormal(),
+                   backend = "cmdstanr",
+                   cores = 4,
+                   chains = 4,
+                   iter = 4000,
+                   warmup = 2000,
+                   seed = 998,
+                   control = list(max_treedepth = 13,
+                                  adapt_delta = 0.99),
+                   file = paste0(models, "mdl_maxH1.rds"))
+
+# if we need to compress the model more
+#saveRDS(mdl_maxH1, file = paste0(models, "mdl_maxH1.rds"), compress = "xz")
+
+mdl_maxH1 <- readRDS(paste0(models, "mdl_maxH1.rds"))
+```
+
+Let’s check how it looks like.
+
+```{r}
+summary(mdl_maxH1)
+```
+
+
+```{r}
+plot(mdl_maxH1)
+```
+
+
+```{r}
+conditional_effects(mdl_maxH1, sample_prior = "only")
+```
+
+
+```{r}
+pp_check(mdl_maxH1, ndraws = 100)
+```
+
+Let’s compute the loo for model comparison.
+
+```{r}
+# run loo mdl
+if (file.exists(paste0(models, "mdl_maxH1_loo.rds"))) {
+  mdl_maxH1_loo <- readRDS(paste0(models, "mdl_maxH1_loo.rds"))
+} else {
+  mdl_maxH1_loo <- loo(mdl_maxH1)
+  saveRDS(mdl_maxH1_loo, paste0(models, "mdl_maxH1_loo.rds"))
+}
+```
+
+#### Model comparison
+
+
+
+
+# Jaw opening
+
+
+

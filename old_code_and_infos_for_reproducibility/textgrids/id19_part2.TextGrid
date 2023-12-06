@@ -1,0 +1,1638 @@
+File type = "ooTextFile"
+Object class = "TextGrid"
+
+xmin = 0 
+xmax = 145.704989
+tiers? <exists> 
+size = 3
+item []:
+    item [1]:
+        class = "IntervalTier"
+        name = "ORT"
+        xmin = 0
+        xmax = 145.704989
+        intervals: size = 101
+        intervals [1]:
+            xmin = 0.000000
+            xmax = 2.890000
+            text = ""
+        intervals [2]:
+            xmin = 2.890000
+            xmax = 3.330000
+            text = "piff"
+        intervals [3]:
+            xmin = 3.330000
+            xmax = 5.860000
+            text = ""
+        intervals [4]:
+            xmin = 5.860000
+            xmax = 6.280000
+            text = "paff"
+        intervals [5]:
+            xmin = 6.280000
+            xmax = 8.790000
+            text = ""
+        intervals [6]:
+            xmin = 8.790000
+            xmax = 9.210000
+            text = "piff"
+        intervals [7]:
+            xmin = 9.210000
+            xmax = 11.750000
+            text = ""
+        intervals [8]:
+            xmin = 11.750000
+            xmax = 12.200000
+            text = "paff"
+        intervals [9]:
+            xmin = 12.200000
+            xmax = 14.430000
+            text = ""
+        intervals [10]:
+            xmin = 14.430000
+            xmax = 14.880000
+            text = "paff"
+        intervals [11]:
+            xmin = 14.880000
+            xmax = 17.530000
+            text = ""
+        intervals [12]:
+            xmin = 17.530000
+            xmax = 17.960000
+            text = "piff"
+        intervals [13]:
+            xmin = 17.960000
+            xmax = 20.480000
+            text = ""
+        intervals [14]:
+            xmin = 20.480000
+            xmax = 20.910000
+            text = "paff"
+        intervals [15]:
+            xmin = 20.910000
+            xmax = 23.330000
+            text = ""
+        intervals [16]:
+            xmin = 23.330000
+            xmax = 23.790000
+            text = "paff"
+        intervals [17]:
+            xmin = 23.790000
+            xmax = 26.320000
+            text = ""
+        intervals [18]:
+            xmin = 26.320000
+            xmax = 26.800000
+            text = "paff"
+        intervals [19]:
+            xmin = 26.800000
+            xmax = 29.500000
+            text = ""
+        intervals [20]:
+            xmin = 29.500000
+            xmax = 29.920000
+            text = "paff"
+        intervals [21]:
+            xmin = 29.920000
+            xmax = 31.890000
+            text = ""
+        intervals [22]:
+            xmin = 31.890000
+            xmax = 32.360000
+            text = "paff"
+        intervals [23]:
+            xmin = 32.360000
+            xmax = 34.770000
+            text = ""
+        intervals [24]:
+            xmin = 34.770000
+            xmax = 35.270000
+            text = "paff"
+        intervals [25]:
+            xmin = 35.270000
+            xmax = 37.710000
+            text = ""
+        intervals [26]:
+            xmin = 37.710000
+            xmax = 38.150000
+            text = "piff"
+        intervals [27]:
+            xmin = 38.150000
+            xmax = 40.460000
+            text = ""
+        intervals [28]:
+            xmin = 40.460000
+            xmax = 40.900000
+            text = "paff"
+        intervals [29]:
+            xmin = 40.900000
+            xmax = 43.090000
+            text = ""
+        intervals [30]:
+            xmin = 43.090000
+            xmax = 43.550000
+            text = "piff"
+        intervals [31]:
+            xmin = 43.550000
+            xmax = 46.150000
+            text = ""
+        intervals [32]:
+            xmin = 46.150000
+            xmax = 46.530000
+            text = "piff"
+        intervals [33]:
+            xmin = 46.530000
+            xmax = 48.900000
+            text = ""
+        intervals [34]:
+            xmin = 48.900000
+            xmax = 49.280000
+            text = "piff"
+        intervals [35]:
+            xmin = 49.280000
+            xmax = 51.410000
+            text = ""
+        intervals [36]:
+            xmin = 51.410000
+            xmax = 51.830000
+            text = "paff"
+        intervals [37]:
+            xmin = 51.830000
+            xmax = 54.150000
+            text = ""
+        intervals [38]:
+            xmin = 54.150000
+            xmax = 54.550000
+            text = "piff"
+        intervals [39]:
+            xmin = 54.550000
+            xmax = 56.810000
+            text = ""
+        intervals [40]:
+            xmin = 56.810000
+            xmax = 57.210000
+            text = "piff"
+        intervals [41]:
+            xmin = 57.210000
+            xmax = 59.800000
+            text = ""
+        intervals [42]:
+            xmin = 59.800000
+            xmax = 60.210000
+            text = "paff"
+        intervals [43]:
+            xmin = 60.210000
+            xmax = 62.540000
+            text = ""
+        intervals [44]:
+            xmin = 62.540000
+            xmax = 62.910000
+            text = "piff"
+        intervals [45]:
+            xmin = 62.910000
+            xmax = 65.230000
+            text = ""
+        intervals [46]:
+            xmin = 65.230000
+            xmax = 65.650000
+            text = "paff"
+        intervals [47]:
+            xmin = 65.650000
+            xmax = 67.860000
+            text = ""
+        intervals [48]:
+            xmin = 67.860000
+            xmax = 68.300000
+            text = "piff"
+        intervals [49]:
+            xmin = 68.300000
+            xmax = 70.830000
+            text = ""
+        intervals [50]:
+            xmin = 70.830000
+            xmax = 71.230000
+            text = "piff"
+        intervals [51]:
+            xmin = 71.230000
+            xmax = 73.460000
+            text = ""
+        intervals [52]:
+            xmin = 73.460000
+            xmax = 73.850000
+            text = "piff"
+        intervals [53]:
+            xmin = 73.850000
+            xmax = 76.510000
+            text = ""
+        intervals [54]:
+            xmin = 76.510000
+            xmax = 76.940000
+            text = "paff"
+        intervals [55]:
+            xmin = 76.940000
+            xmax = 79.620000
+            text = ""
+        intervals [56]:
+            xmin = 79.620000
+            xmax = 80.040000
+            text = "piff"
+        intervals [57]:
+            xmin = 80.040000
+            xmax = 83.620000
+            text = ""
+        intervals [58]:
+            xmin = 83.620000
+            xmax = 83.990000
+            text = "piff"
+        intervals [59]:
+            xmin = 83.990000
+            xmax = 86.830000
+            text = ""
+        intervals [60]:
+            xmin = 86.830000
+            xmax = 87.230000
+            text = "paff"
+        intervals [61]:
+            xmin = 87.230000
+            xmax = 90.020000
+            text = ""
+        intervals [62]:
+            xmin = 90.020000
+            xmax = 90.460000
+            text = "paff"
+        intervals [63]:
+            xmin = 90.460000
+            xmax = 92.960000
+            text = ""
+        intervals [64]:
+            xmin = 92.960000
+            xmax = 93.360000
+            text = "paff"
+        intervals [65]:
+            xmin = 93.360000
+            xmax = 95.670000
+            text = ""
+        intervals [66]:
+            xmin = 95.670000
+            xmax = 96.080000
+            text = "piff"
+        intervals [67]:
+            xmin = 96.080000
+            xmax = 98.430000
+            text = ""
+        intervals [68]:
+            xmin = 98.430000
+            xmax = 98.900000
+            text = "paff"
+        intervals [69]:
+            xmin = 98.900000
+            xmax = 101.220000
+            text = ""
+        intervals [70]:
+            xmin = 101.220000
+            xmax = 101.640000
+            text = "paff"
+        intervals [71]:
+            xmin = 101.640000
+            xmax = 104.170000
+            text = ""
+        intervals [72]:
+            xmin = 104.170000
+            xmax = 104.560000
+            text = "piff"
+        intervals [73]:
+            xmin = 104.560000
+            xmax = 106.750000
+            text = ""
+        intervals [74]:
+            xmin = 106.750000
+            xmax = 107.150000
+            text = "piff"
+        intervals [75]:
+            xmin = 107.150000
+            xmax = 109.310000
+            text = ""
+        intervals [76]:
+            xmin = 109.310000
+            xmax = 109.710000
+            text = "piff"
+        intervals [77]:
+            xmin = 109.710000
+            xmax = 111.970000
+            text = ""
+        intervals [78]:
+            xmin = 111.970000
+            xmax = 112.380000
+            text = "paff"
+        intervals [79]:
+            xmin = 112.380000
+            xmax = 114.830000
+            text = ""
+        intervals [80]:
+            xmin = 114.830000
+            xmax = 115.250000
+            text = "paff"
+        intervals [81]:
+            xmin = 115.250000
+            xmax = 117.360000
+            text = ""
+        intervals [82]:
+            xmin = 117.360000
+            xmax = 117.770000
+            text = "piff"
+        intervals [83]:
+            xmin = 117.770000
+            xmax = 120.080000
+            text = ""
+        intervals [84]:
+            xmin = 120.080000
+            xmax = 120.490000
+            text = "piff"
+        intervals [85]:
+            xmin = 120.490000
+            xmax = 122.780000
+            text = ""
+        intervals [86]:
+            xmin = 122.780000
+            xmax = 123.130000
+            text = "piff"
+        intervals [87]:
+            xmin = 123.130000
+            xmax = 125.390000
+            text = ""
+        intervals [88]:
+            xmin = 125.390000
+            xmax = 125.840000
+            text = "paff"
+        intervals [89]:
+            xmin = 125.840000
+            xmax = 128.000000
+            text = ""
+        intervals [90]:
+            xmin = 128.000000
+            xmax = 128.470000
+            text = "paff"
+        intervals [91]:
+            xmin = 128.470000
+            xmax = 130.650000
+            text = ""
+        intervals [92]:
+            xmin = 130.650000
+            xmax = 131.080000
+            text = "piff"
+        intervals [93]:
+            xmin = 131.080000
+            xmax = 133.510000
+            text = ""
+        intervals [94]:
+            xmin = 133.510000
+            xmax = 133.930000
+            text = "piff"
+        intervals [95]:
+            xmin = 133.930000
+            xmax = 136.590000
+            text = ""
+        intervals [96]:
+            xmin = 136.590000
+            xmax = 136.980000
+            text = "piff"
+        intervals [97]:
+            xmin = 136.980000
+            xmax = 139.320000
+            text = ""
+        intervals [98]:
+            xmin = 139.320000
+            xmax = 139.710000
+            text = "piff"
+        intervals [99]:
+            xmin = 139.710000
+            xmax = 141.940000
+            text = ""
+        intervals [100]:
+            xmin = 141.940000
+            xmax = 142.350000
+            text = "piff"
+        intervals [101]:
+            xmin = 142.350000
+            xmax = 145.704989
+            text = ""
+    item [2]:
+        class = "IntervalTier"
+        name = "KAN"
+        xmin = 0
+        xmax = 145.704989
+        intervals: size = 101
+        intervals [1]:
+            xmin = 0.000000
+            xmax = 2.890000
+            text = ""
+        intervals [2]:
+            xmin = 2.890000
+            xmax = 3.330000
+            text = "p I f"
+        intervals [3]:
+            xmin = 3.330000
+            xmax = 5.860000
+            text = ""
+        intervals [4]:
+            xmin = 5.860000
+            xmax = 6.280000
+            text = "p a f"
+        intervals [5]:
+            xmin = 6.280000
+            xmax = 8.790000
+            text = ""
+        intervals [6]:
+            xmin = 8.790000
+            xmax = 9.210000
+            text = "p I f"
+        intervals [7]:
+            xmin = 9.210000
+            xmax = 11.750000
+            text = ""
+        intervals [8]:
+            xmin = 11.750000
+            xmax = 12.200000
+            text = "p a f"
+        intervals [9]:
+            xmin = 12.200000
+            xmax = 14.430000
+            text = ""
+        intervals [10]:
+            xmin = 14.430000
+            xmax = 14.880000
+            text = "p a f"
+        intervals [11]:
+            xmin = 14.880000
+            xmax = 17.530000
+            text = ""
+        intervals [12]:
+            xmin = 17.530000
+            xmax = 17.960000
+            text = "p I f"
+        intervals [13]:
+            xmin = 17.960000
+            xmax = 20.480000
+            text = ""
+        intervals [14]:
+            xmin = 20.480000
+            xmax = 20.910000
+            text = "p a f"
+        intervals [15]:
+            xmin = 20.910000
+            xmax = 23.330000
+            text = ""
+        intervals [16]:
+            xmin = 23.330000
+            xmax = 23.790000
+            text = "p a f"
+        intervals [17]:
+            xmin = 23.790000
+            xmax = 26.320000
+            text = ""
+        intervals [18]:
+            xmin = 26.320000
+            xmax = 26.800000
+            text = "p a f"
+        intervals [19]:
+            xmin = 26.800000
+            xmax = 29.500000
+            text = ""
+        intervals [20]:
+            xmin = 29.500000
+            xmax = 29.920000
+            text = "p a f"
+        intervals [21]:
+            xmin = 29.920000
+            xmax = 31.890000
+            text = ""
+        intervals [22]:
+            xmin = 31.890000
+            xmax = 32.360000
+            text = "p a f"
+        intervals [23]:
+            xmin = 32.360000
+            xmax = 34.770000
+            text = ""
+        intervals [24]:
+            xmin = 34.770000
+            xmax = 35.270000
+            text = "p a f"
+        intervals [25]:
+            xmin = 35.270000
+            xmax = 37.710000
+            text = ""
+        intervals [26]:
+            xmin = 37.710000
+            xmax = 38.150000
+            text = "p I f"
+        intervals [27]:
+            xmin = 38.150000
+            xmax = 40.460000
+            text = ""
+        intervals [28]:
+            xmin = 40.460000
+            xmax = 40.900000
+            text = "p a f"
+        intervals [29]:
+            xmin = 40.900000
+            xmax = 43.090000
+            text = ""
+        intervals [30]:
+            xmin = 43.090000
+            xmax = 43.550000
+            text = "p I f"
+        intervals [31]:
+            xmin = 43.550000
+            xmax = 46.150000
+            text = ""
+        intervals [32]:
+            xmin = 46.150000
+            xmax = 46.530000
+            text = "p I f"
+        intervals [33]:
+            xmin = 46.530000
+            xmax = 48.900000
+            text = ""
+        intervals [34]:
+            xmin = 48.900000
+            xmax = 49.280000
+            text = "p I f"
+        intervals [35]:
+            xmin = 49.280000
+            xmax = 51.410000
+            text = ""
+        intervals [36]:
+            xmin = 51.410000
+            xmax = 51.830000
+            text = "p a f"
+        intervals [37]:
+            xmin = 51.830000
+            xmax = 54.150000
+            text = ""
+        intervals [38]:
+            xmin = 54.150000
+            xmax = 54.550000
+            text = "p I f"
+        intervals [39]:
+            xmin = 54.550000
+            xmax = 56.810000
+            text = ""
+        intervals [40]:
+            xmin = 56.810000
+            xmax = 57.210000
+            text = "p I f"
+        intervals [41]:
+            xmin = 57.210000
+            xmax = 59.800000
+            text = ""
+        intervals [42]:
+            xmin = 59.800000
+            xmax = 60.210000
+            text = "p a f"
+        intervals [43]:
+            xmin = 60.210000
+            xmax = 62.540000
+            text = ""
+        intervals [44]:
+            xmin = 62.540000
+            xmax = 62.910000
+            text = "p I f"
+        intervals [45]:
+            xmin = 62.910000
+            xmax = 65.230000
+            text = ""
+        intervals [46]:
+            xmin = 65.230000
+            xmax = 65.650000
+            text = "p a f"
+        intervals [47]:
+            xmin = 65.650000
+            xmax = 67.860000
+            text = ""
+        intervals [48]:
+            xmin = 67.860000
+            xmax = 68.300000
+            text = "p I f"
+        intervals [49]:
+            xmin = 68.300000
+            xmax = 70.830000
+            text = ""
+        intervals [50]:
+            xmin = 70.830000
+            xmax = 71.230000
+            text = "p I f"
+        intervals [51]:
+            xmin = 71.230000
+            xmax = 73.460000
+            text = ""
+        intervals [52]:
+            xmin = 73.460000
+            xmax = 73.850000
+            text = "p I f"
+        intervals [53]:
+            xmin = 73.850000
+            xmax = 76.510000
+            text = ""
+        intervals [54]:
+            xmin = 76.510000
+            xmax = 76.940000
+            text = "p a f"
+        intervals [55]:
+            xmin = 76.940000
+            xmax = 79.620000
+            text = ""
+        intervals [56]:
+            xmin = 79.620000
+            xmax = 80.040000
+            text = "p I f"
+        intervals [57]:
+            xmin = 80.040000
+            xmax = 83.620000
+            text = ""
+        intervals [58]:
+            xmin = 83.620000
+            xmax = 83.990000
+            text = "p I f"
+        intervals [59]:
+            xmin = 83.990000
+            xmax = 86.830000
+            text = ""
+        intervals [60]:
+            xmin = 86.830000
+            xmax = 87.230000
+            text = "p a f"
+        intervals [61]:
+            xmin = 87.230000
+            xmax = 90.020000
+            text = ""
+        intervals [62]:
+            xmin = 90.020000
+            xmax = 90.460000
+            text = "p a f"
+        intervals [63]:
+            xmin = 90.460000
+            xmax = 92.960000
+            text = ""
+        intervals [64]:
+            xmin = 92.960000
+            xmax = 93.360000
+            text = "p a f"
+        intervals [65]:
+            xmin = 93.360000
+            xmax = 95.670000
+            text = ""
+        intervals [66]:
+            xmin = 95.670000
+            xmax = 96.080000
+            text = "p I f"
+        intervals [67]:
+            xmin = 96.080000
+            xmax = 98.430000
+            text = ""
+        intervals [68]:
+            xmin = 98.430000
+            xmax = 98.900000
+            text = "p a f"
+        intervals [69]:
+            xmin = 98.900000
+            xmax = 101.220000
+            text = ""
+        intervals [70]:
+            xmin = 101.220000
+            xmax = 101.640000
+            text = "p a f"
+        intervals [71]:
+            xmin = 101.640000
+            xmax = 104.170000
+            text = ""
+        intervals [72]:
+            xmin = 104.170000
+            xmax = 104.560000
+            text = "p I f"
+        intervals [73]:
+            xmin = 104.560000
+            xmax = 106.750000
+            text = ""
+        intervals [74]:
+            xmin = 106.750000
+            xmax = 107.150000
+            text = "p I f"
+        intervals [75]:
+            xmin = 107.150000
+            xmax = 109.310000
+            text = ""
+        intervals [76]:
+            xmin = 109.310000
+            xmax = 109.710000
+            text = "p I f"
+        intervals [77]:
+            xmin = 109.710000
+            xmax = 111.970000
+            text = ""
+        intervals [78]:
+            xmin = 111.970000
+            xmax = 112.380000
+            text = "p a f"
+        intervals [79]:
+            xmin = 112.380000
+            xmax = 114.830000
+            text = ""
+        intervals [80]:
+            xmin = 114.830000
+            xmax = 115.250000
+            text = "p a f"
+        intervals [81]:
+            xmin = 115.250000
+            xmax = 117.360000
+            text = ""
+        intervals [82]:
+            xmin = 117.360000
+            xmax = 117.770000
+            text = "p I f"
+        intervals [83]:
+            xmin = 117.770000
+            xmax = 120.080000
+            text = ""
+        intervals [84]:
+            xmin = 120.080000
+            xmax = 120.490000
+            text = "p I f"
+        intervals [85]:
+            xmin = 120.490000
+            xmax = 122.780000
+            text = ""
+        intervals [86]:
+            xmin = 122.780000
+            xmax = 123.130000
+            text = "p I f"
+        intervals [87]:
+            xmin = 123.130000
+            xmax = 125.390000
+            text = ""
+        intervals [88]:
+            xmin = 125.390000
+            xmax = 125.840000
+            text = "p a f"
+        intervals [89]:
+            xmin = 125.840000
+            xmax = 128.000000
+            text = ""
+        intervals [90]:
+            xmin = 128.000000
+            xmax = 128.470000
+            text = "p a f"
+        intervals [91]:
+            xmin = 128.470000
+            xmax = 130.650000
+            text = ""
+        intervals [92]:
+            xmin = 130.650000
+            xmax = 131.080000
+            text = "p I f"
+        intervals [93]:
+            xmin = 131.080000
+            xmax = 133.510000
+            text = ""
+        intervals [94]:
+            xmin = 133.510000
+            xmax = 133.930000
+            text = "p I f"
+        intervals [95]:
+            xmin = 133.930000
+            xmax = 136.590000
+            text = ""
+        intervals [96]:
+            xmin = 136.590000
+            xmax = 136.980000
+            text = "p I f"
+        intervals [97]:
+            xmin = 136.980000
+            xmax = 139.320000
+            text = ""
+        intervals [98]:
+            xmin = 139.320000
+            xmax = 139.710000
+            text = "p I f"
+        intervals [99]:
+            xmin = 139.710000
+            xmax = 141.940000
+            text = ""
+        intervals [100]:
+            xmin = 141.940000
+            xmax = 142.350000
+            text = "p I f"
+        intervals [101]:
+            xmin = 142.350000
+            xmax = 145.704989
+            text = ""
+    item [3]:
+        class = "IntervalTier"
+        name = "MAU"
+        xmin = 0
+        xmax = 145.704989
+        intervals: size = 201
+        intervals [1]:
+            xmin = 0.000000
+            xmax = 2.890000
+            text = "<p:>"
+        intervals [2]:
+            xmin = 2.890000
+            xmax = 2.960000
+            text = "p"
+        intervals [3]:
+            xmin = 2.960000
+            xmax = 3.100000
+            text = "I"
+        intervals [4]:
+            xmin = 3.100000
+            xmax = 3.330000
+            text = "f"
+        intervals [5]:
+            xmin = 3.330000
+            xmax = 5.860000
+            text = "<p:>"
+        intervals [6]:
+            xmin = 5.860000
+            xmax = 5.930000
+            text = "p"
+        intervals [7]:
+            xmin = 5.930000
+            xmax = 6.100000
+            text = "a"
+        intervals [8]:
+            xmin = 6.100000
+            xmax = 6.280000
+            text = "f"
+        intervals [9]:
+            xmin = 6.280000
+            xmax = 8.790000
+            text = "<p:>"
+        intervals [10]:
+            xmin = 8.790000
+            xmax = 8.830000
+            text = "p"
+        intervals [11]:
+            xmin = 8.830000
+            xmax = 9.000000
+            text = "I"
+        intervals [12]:
+            xmin = 9.000000
+            xmax = 9.210000
+            text = "f"
+        intervals [13]:
+            xmin = 9.210000
+            xmax = 11.750000
+            text = "<p:>"
+        intervals [14]:
+            xmin = 11.750000
+            xmax = 11.820000
+            text = "p"
+        intervals [15]:
+            xmin = 11.820000
+            xmax = 11.950000
+            text = "a"
+        intervals [16]:
+            xmin = 11.950000
+            xmax = 12.200000
+            text = "f"
+        intervals [17]:
+            xmin = 12.200000
+            xmax = 14.430000
+            text = "<p:>"
+        intervals [18]:
+            xmin = 14.430000
+            xmax = 14.520000
+            text = "p"
+        intervals [19]:
+            xmin = 14.520000
+            xmax = 14.650000
+            text = "a"
+        intervals [20]:
+            xmin = 14.650000
+            xmax = 14.880000
+            text = "f"
+        intervals [21]:
+            xmin = 14.880000
+            xmax = 17.530000
+            text = "<p:>"
+        intervals [22]:
+            xmin = 17.530000
+            xmax = 17.560000
+            text = "p"
+        intervals [23]:
+            xmin = 17.560000
+            xmax = 17.800000
+            text = "I"
+        intervals [24]:
+            xmin = 17.800000
+            xmax = 17.960000
+            text = "f"
+        intervals [25]:
+            xmin = 17.960000
+            xmax = 20.480000
+            text = "<p:>"
+        intervals [26]:
+            xmin = 20.480000
+            xmax = 20.550000
+            text = "p"
+        intervals [27]:
+            xmin = 20.550000
+            xmax = 20.700000
+            text = "a"
+        intervals [28]:
+            xmin = 20.700000
+            xmax = 20.910000
+            text = "f"
+        intervals [29]:
+            xmin = 20.910000
+            xmax = 23.330000
+            text = "<p:>"
+        intervals [30]:
+            xmin = 23.330000
+            xmax = 23.360000
+            text = "p"
+        intervals [31]:
+            xmin = 23.360000
+            xmax = 23.540000
+            text = "a"
+        intervals [32]:
+            xmin = 23.540000
+            xmax = 23.790000
+            text = "f"
+        intervals [33]:
+            xmin = 23.790000
+            xmax = 26.320000
+            text = "<p:>"
+        intervals [34]:
+            xmin = 26.320000
+            xmax = 26.390000
+            text = "p"
+        intervals [35]:
+            xmin = 26.390000
+            xmax = 26.550000
+            text = "a"
+        intervals [36]:
+            xmin = 26.550000
+            xmax = 26.800000
+            text = "f"
+        intervals [37]:
+            xmin = 26.800000
+            xmax = 29.500000
+            text = "<p:>"
+        intervals [38]:
+            xmin = 29.500000
+            xmax = 29.590000
+            text = "p"
+        intervals [39]:
+            xmin = 29.590000
+            xmax = 29.730000
+            text = "a"
+        intervals [40]:
+            xmin = 29.730000
+            xmax = 29.920000
+            text = "f"
+        intervals [41]:
+            xmin = 29.920000
+            xmax = 31.890000
+            text = "<p:>"
+        intervals [42]:
+            xmin = 31.890000
+            xmax = 31.970000
+            text = "p"
+        intervals [43]:
+            xmin = 31.970000
+            xmax = 32.140000
+            text = "a"
+        intervals [44]:
+            xmin = 32.140000
+            xmax = 32.360000
+            text = "f"
+        intervals [45]:
+            xmin = 32.360000
+            xmax = 34.770000
+            text = "<p:>"
+        intervals [46]:
+            xmin = 34.770000
+            xmax = 34.810000
+            text = "p"
+        intervals [47]:
+            xmin = 34.810000
+            xmax = 34.980000
+            text = "a"
+        intervals [48]:
+            xmin = 34.980000
+            xmax = 35.270000
+            text = "f"
+        intervals [49]:
+            xmin = 35.270000
+            xmax = 37.710000
+            text = "<p:>"
+        intervals [50]:
+            xmin = 37.710000
+            xmax = 37.750000
+            text = "p"
+        intervals [51]:
+            xmin = 37.750000
+            xmax = 37.890000
+            text = "I"
+        intervals [52]:
+            xmin = 37.890000
+            xmax = 38.150000
+            text = "f"
+        intervals [53]:
+            xmin = 38.150000
+            xmax = 40.460000
+            text = "<p:>"
+        intervals [54]:
+            xmin = 40.460000
+            xmax = 40.540000
+            text = "p"
+        intervals [55]:
+            xmin = 40.540000
+            xmax = 40.730000
+            text = "a"
+        intervals [56]:
+            xmin = 40.730000
+            xmax = 40.900000
+            text = "f"
+        intervals [57]:
+            xmin = 40.900000
+            xmax = 43.090000
+            text = "<p:>"
+        intervals [58]:
+            xmin = 43.090000
+            xmax = 43.150000
+            text = "p"
+        intervals [59]:
+            xmin = 43.150000
+            xmax = 43.290000
+            text = "I"
+        intervals [60]:
+            xmin = 43.290000
+            xmax = 43.550000
+            text = "f"
+        intervals [61]:
+            xmin = 43.550000
+            xmax = 46.150000
+            text = "<p:>"
+        intervals [62]:
+            xmin = 46.150000
+            xmax = 46.200000
+            text = "p"
+        intervals [63]:
+            xmin = 46.200000
+            xmax = 46.330000
+            text = "I"
+        intervals [64]:
+            xmin = 46.330000
+            xmax = 46.530000
+            text = "f"
+        intervals [65]:
+            xmin = 46.530000
+            xmax = 48.900000
+            text = "<p:>"
+        intervals [66]:
+            xmin = 48.900000
+            xmax = 48.940000
+            text = "p"
+        intervals [67]:
+            xmin = 48.940000
+            xmax = 49.090000
+            text = "I"
+        intervals [68]:
+            xmin = 49.090000
+            xmax = 49.280000
+            text = "f"
+        intervals [69]:
+            xmin = 49.280000
+            xmax = 51.410000
+            text = "<p:>"
+        intervals [70]:
+            xmin = 51.410000
+            xmax = 51.490000
+            text = "p"
+        intervals [71]:
+            xmin = 51.490000
+            xmax = 51.620000
+            text = "a"
+        intervals [72]:
+            xmin = 51.620000
+            xmax = 51.830000
+            text = "f"
+        intervals [73]:
+            xmin = 51.830000
+            xmax = 54.150000
+            text = "<p:>"
+        intervals [74]:
+            xmin = 54.150000
+            xmax = 54.210000
+            text = "p"
+        intervals [75]:
+            xmin = 54.210000
+            xmax = 54.340000
+            text = "I"
+        intervals [76]:
+            xmin = 54.340000
+            xmax = 54.550000
+            text = "f"
+        intervals [77]:
+            xmin = 54.550000
+            xmax = 56.810000
+            text = "<p:>"
+        intervals [78]:
+            xmin = 56.810000
+            xmax = 56.870000
+            text = "p"
+        intervals [79]:
+            xmin = 56.870000
+            xmax = 57.000000
+            text = "I"
+        intervals [80]:
+            xmin = 57.000000
+            xmax = 57.210000
+            text = "f"
+        intervals [81]:
+            xmin = 57.210000
+            xmax = 59.800000
+            text = "<p:>"
+        intervals [82]:
+            xmin = 59.800000
+            xmax = 59.870000
+            text = "p"
+        intervals [83]:
+            xmin = 59.870000
+            xmax = 59.990000
+            text = "a"
+        intervals [84]:
+            xmin = 59.990000
+            xmax = 60.210000
+            text = "f"
+        intervals [85]:
+            xmin = 60.210000
+            xmax = 62.540000
+            text = "<p:>"
+        intervals [86]:
+            xmin = 62.540000
+            xmax = 62.600000
+            text = "p"
+        intervals [87]:
+            xmin = 62.600000
+            xmax = 62.730000
+            text = "I"
+        intervals [88]:
+            xmin = 62.730000
+            xmax = 62.910000
+            text = "f"
+        intervals [89]:
+            xmin = 62.910000
+            xmax = 65.230000
+            text = "<p:>"
+        intervals [90]:
+            xmin = 65.230000
+            xmax = 65.300000
+            text = "p"
+        intervals [91]:
+            xmin = 65.300000
+            xmax = 65.430000
+            text = "a"
+        intervals [92]:
+            xmin = 65.430000
+            xmax = 65.650000
+            text = "f"
+        intervals [93]:
+            xmin = 65.650000
+            xmax = 67.860000
+            text = "<p:>"
+        intervals [94]:
+            xmin = 67.860000
+            xmax = 67.940000
+            text = "p"
+        intervals [95]:
+            xmin = 67.940000
+            xmax = 68.090000
+            text = "I"
+        intervals [96]:
+            xmin = 68.090000
+            xmax = 68.300000
+            text = "f"
+        intervals [97]:
+            xmin = 68.300000
+            xmax = 70.830000
+            text = "<p:>"
+        intervals [98]:
+            xmin = 70.830000
+            xmax = 70.860000
+            text = "p"
+        intervals [99]:
+            xmin = 70.860000
+            xmax = 71.010000
+            text = "I"
+        intervals [100]:
+            xmin = 71.010000
+            xmax = 71.230000
+            text = "f"
+        intervals [101]:
+            xmin = 71.230000
+            xmax = 73.460000
+            text = "<p:>"
+        intervals [102]:
+            xmin = 73.460000
+            xmax = 73.530000
+            text = "p"
+        intervals [103]:
+            xmin = 73.530000
+            xmax = 73.650000
+            text = "I"
+        intervals [104]:
+            xmin = 73.650000
+            xmax = 73.850000
+            text = "f"
+        intervals [105]:
+            xmin = 73.850000
+            xmax = 76.510000
+            text = "<p:>"
+        intervals [106]:
+            xmin = 76.510000
+            xmax = 76.590000
+            text = "p"
+        intervals [107]:
+            xmin = 76.590000
+            xmax = 76.750000
+            text = "a"
+        intervals [108]:
+            xmin = 76.750000
+            xmax = 76.940000
+            text = "f"
+        intervals [109]:
+            xmin = 76.940000
+            xmax = 79.620000
+            text = "<p:>"
+        intervals [110]:
+            xmin = 79.620000
+            xmax = 79.690000
+            text = "p"
+        intervals [111]:
+            xmin = 79.690000
+            xmax = 79.810000
+            text = "I"
+        intervals [112]:
+            xmin = 79.810000
+            xmax = 80.040000
+            text = "f"
+        intervals [113]:
+            xmin = 80.040000
+            xmax = 83.620000
+            text = "<p:>"
+        intervals [114]:
+            xmin = 83.620000
+            xmax = 83.660000
+            text = "p"
+        intervals [115]:
+            xmin = 83.660000
+            xmax = 83.830000
+            text = "I"
+        intervals [116]:
+            xmin = 83.830000
+            xmax = 83.990000
+            text = "f"
+        intervals [117]:
+            xmin = 83.990000
+            xmax = 86.830000
+            text = "<p:>"
+        intervals [118]:
+            xmin = 86.830000
+            xmax = 86.910000
+            text = "p"
+        intervals [119]:
+            xmin = 86.910000
+            xmax = 87.110000
+            text = "a"
+        intervals [120]:
+            xmin = 87.110000
+            xmax = 87.230000
+            text = "f"
+        intervals [121]:
+            xmin = 87.230000
+            xmax = 90.020000
+            text = "<p:>"
+        intervals [122]:
+            xmin = 90.020000
+            xmax = 90.110000
+            text = "p"
+        intervals [123]:
+            xmin = 90.110000
+            xmax = 90.260000
+            text = "a"
+        intervals [124]:
+            xmin = 90.260000
+            xmax = 90.460000
+            text = "f"
+        intervals [125]:
+            xmin = 90.460000
+            xmax = 92.960000
+            text = "<p:>"
+        intervals [126]:
+            xmin = 92.960000
+            xmax = 93.030000
+            text = "p"
+        intervals [127]:
+            xmin = 93.030000
+            xmax = 93.160000
+            text = "a"
+        intervals [128]:
+            xmin = 93.160000
+            xmax = 93.360000
+            text = "f"
+        intervals [129]:
+            xmin = 93.360000
+            xmax = 95.670000
+            text = "<p:>"
+        intervals [130]:
+            xmin = 95.670000
+            xmax = 95.700000
+            text = "p"
+        intervals [131]:
+            xmin = 95.700000
+            xmax = 95.860000
+            text = "I"
+        intervals [132]:
+            xmin = 95.860000
+            xmax = 96.080000
+            text = "f"
+        intervals [133]:
+            xmin = 96.080000
+            xmax = 98.430000
+            text = "<p:>"
+        intervals [134]:
+            xmin = 98.430000
+            xmax = 98.510000
+            text = "p"
+        intervals [135]:
+            xmin = 98.510000
+            xmax = 98.650000
+            text = "a"
+        intervals [136]:
+            xmin = 98.650000
+            xmax = 98.900000
+            text = "f"
+        intervals [137]:
+            xmin = 98.900000
+            xmax = 101.220000
+            text = "<p:>"
+        intervals [138]:
+            xmin = 101.220000
+            xmax = 101.310000
+            text = "p"
+        intervals [139]:
+            xmin = 101.310000
+            xmax = 101.420000
+            text = "a"
+        intervals [140]:
+            xmin = 101.420000
+            xmax = 101.640000
+            text = "f"
+        intervals [141]:
+            xmin = 101.640000
+            xmax = 104.170000
+            text = "<p:>"
+        intervals [142]:
+            xmin = 104.170000
+            xmax = 104.230000
+            text = "p"
+        intervals [143]:
+            xmin = 104.230000
+            xmax = 104.360000
+            text = "I"
+        intervals [144]:
+            xmin = 104.360000
+            xmax = 104.560000
+            text = "f"
+        intervals [145]:
+            xmin = 104.560000
+            xmax = 106.750000
+            text = "<p:>"
+        intervals [146]:
+            xmin = 106.750000
+            xmax = 106.820000
+            text = "p"
+        intervals [147]:
+            xmin = 106.820000
+            xmax = 106.940000
+            text = "I"
+        intervals [148]:
+            xmin = 106.940000
+            xmax = 107.150000
+            text = "f"
+        intervals [149]:
+            xmin = 107.150000
+            xmax = 109.310000
+            text = "<p:>"
+        intervals [150]:
+            xmin = 109.310000
+            xmax = 109.350000
+            text = "p"
+        intervals [151]:
+            xmin = 109.350000
+            xmax = 109.490000
+            text = "I"
+        intervals [152]:
+            xmin = 109.490000
+            xmax = 109.710000
+            text = "f"
+        intervals [153]:
+            xmin = 109.710000
+            xmax = 111.970000
+            text = "<p:>"
+        intervals [154]:
+            xmin = 111.970000
+            xmax = 112.050000
+            text = "p"
+        intervals [155]:
+            xmin = 112.050000
+            xmax = 112.180000
+            text = "a"
+        intervals [156]:
+            xmin = 112.180000
+            xmax = 112.380000
+            text = "f"
+        intervals [157]:
+            xmin = 112.380000
+            xmax = 114.830000
+            text = "<p:>"
+        intervals [158]:
+            xmin = 114.830000
+            xmax = 114.910000
+            text = "p"
+        intervals [159]:
+            xmin = 114.910000
+            xmax = 115.040000
+            text = "a"
+        intervals [160]:
+            xmin = 115.040000
+            xmax = 115.250000
+            text = "f"
+        intervals [161]:
+            xmin = 115.250000
+            xmax = 117.360000
+            text = "<p:>"
+        intervals [162]:
+            xmin = 117.360000
+            xmax = 117.440000
+            text = "p"
+        intervals [163]:
+            xmin = 117.440000
+            xmax = 117.560000
+            text = "I"
+        intervals [164]:
+            xmin = 117.560000
+            xmax = 117.770000
+            text = "f"
+        intervals [165]:
+            xmin = 117.770000
+            xmax = 120.080000
+            text = "<p:>"
+        intervals [166]:
+            xmin = 120.080000
+            xmax = 120.140000
+            text = "p"
+        intervals [167]:
+            xmin = 120.140000
+            xmax = 120.270000
+            text = "I"
+        intervals [168]:
+            xmin = 120.270000
+            xmax = 120.490000
+            text = "f"
+        intervals [169]:
+            xmin = 120.490000
+            xmax = 122.780000
+            text = "<p:>"
+        intervals [170]:
+            xmin = 122.780000
+            xmax = 122.830000
+            text = "p"
+        intervals [171]:
+            xmin = 122.830000
+            xmax = 122.960000
+            text = "I"
+        intervals [172]:
+            xmin = 122.960000
+            xmax = 123.130000
+            text = "f"
+        intervals [173]:
+            xmin = 123.130000
+            xmax = 125.390000
+            text = "<p:>"
+        intervals [174]:
+            xmin = 125.390000
+            xmax = 125.470000
+            text = "p"
+        intervals [175]:
+            xmin = 125.470000
+            xmax = 125.680000
+            text = "a"
+        intervals [176]:
+            xmin = 125.680000
+            xmax = 125.840000
+            text = "f"
+        intervals [177]:
+            xmin = 125.840000
+            xmax = 128.000000
+            text = "<p:>"
+        intervals [178]:
+            xmin = 128.000000
+            xmax = 128.080000
+            text = "p"
+        intervals [179]:
+            xmin = 128.080000
+            xmax = 128.210000
+            text = "a"
+        intervals [180]:
+            xmin = 128.210000
+            xmax = 128.470000
+            text = "f"
+        intervals [181]:
+            xmin = 128.470000
+            xmax = 130.650000
+            text = "<p:>"
+        intervals [182]:
+            xmin = 130.650000
+            xmax = 130.720000
+            text = "p"
+        intervals [183]:
+            xmin = 130.720000
+            xmax = 130.850000
+            text = "I"
+        intervals [184]:
+            xmin = 130.850000
+            xmax = 131.080000
+            text = "f"
+        intervals [185]:
+            xmin = 131.080000
+            xmax = 133.510000
+            text = "<p:>"
+        intervals [186]:
+            xmin = 133.510000
+            xmax = 133.580000
+            text = "p"
+        intervals [187]:
+            xmin = 133.580000
+            xmax = 133.710000
+            text = "I"
+        intervals [188]:
+            xmin = 133.710000
+            xmax = 133.930000
+            text = "f"
+        intervals [189]:
+            xmin = 133.930000
+            xmax = 136.590000
+            text = "<p:>"
+        intervals [190]:
+            xmin = 136.590000
+            xmax = 136.630000
+            text = "p"
+        intervals [191]:
+            xmin = 136.630000
+            xmax = 136.780000
+            text = "I"
+        intervals [192]:
+            xmin = 136.780000
+            xmax = 136.980000
+            text = "f"
+        intervals [193]:
+            xmin = 136.980000
+            xmax = 139.320000
+            text = "<p:>"
+        intervals [194]:
+            xmin = 139.320000
+            xmax = 139.380000
+            text = "p"
+        intervals [195]:
+            xmin = 139.380000
+            xmax = 139.510000
+            text = "I"
+        intervals [196]:
+            xmin = 139.510000
+            xmax = 139.710000
+            text = "f"
+        intervals [197]:
+            xmin = 139.710000
+            xmax = 141.940000
+            text = "<p:>"
+        intervals [198]:
+            xmin = 141.940000
+            xmax = 142.000000
+            text = "p"
+        intervals [199]:
+            xmin = 142.000000
+            xmax = 142.160000
+            text = "I"
+        intervals [200]:
+            xmin = 142.160000
+            xmax = 142.350000
+            text = "f"
+        intervals [201]:
+            xmin = 142.350000
+            xmax = 145.704989
+            text = "<p:>"
