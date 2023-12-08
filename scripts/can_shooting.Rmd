@@ -605,7 +605,33 @@ f0_angle <- ggplot(can,
 grid.arrange(f0_head_pos, f0_angle, ncol = 2)
 ```
 
-Visually, they are basically the same. I think it is better to go with angle then.
+Visually, they are basically the same. I think it is better to go with head position then, becasue it captures exactly the movement of interest.
+
+## Head position vs. vertical position
+
+Logically, the vertical position would induce movement. It does not do it always, but if we put two highly correlated factors in the analysis, this may confuse the model and the effects may be diluted.
+
+Therefore, we check for the correlation between head position and vertical position.
+
+```{r}
+cor.test(can$head_pos, can$v_pos)
+# what will happen if we use z-normalized values
+cor.test(can$head_pos_z, can$v_pos)
+```
+
+Plotting the raw values...
+
+```{r}
+ggplot(can,
+       aes(x = v_pos,
+           y = head_pos)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(size = 1, 
+              method = lm, 
+              se = F)
+```
+
+Given the correlation, we should not put them in the same model. We will have to separate them and see how they perform in the same environment.
 
 ## Bayesian modeling
 
@@ -632,7 +658,7 @@ We can expect *f*0 **not** to be normally distributed. However, if we use some k
 
 We will fit an intercept-only model for comparison, a model without random slopes and intercepts, and a maximal model. First, we inspect the priors we must specify for each model. Then, we will specify the priors separately.
 
-For each model, I will fit weakly informative priors. 
+For each model, I will fit weakly informative priors.
 
 #### Intercept-only
 
@@ -671,7 +697,7 @@ priors_intOnlyH1 <- c(
 #### No random slopes
 
 ```{r}
-get_prior(formula = f0_mean ~ 1 + vowel_s + can_size_s + angle + h_pos + v_pos + height +
+get_prior(formula = f0_mean ~ 1 + vowel_s + can_size_s + head_pos + h_pos + v_pos + height + # angle and v_pos will be separated
             (1 | speaker),
           data = can,
           family = lognormal())
@@ -689,7 +715,7 @@ priors_noRandomH1 <- c(
 #### Maximal model
 
 ```{r}
-get_prior(formula = f0_mean ~ 1 + vowel_s + can_size_s + angle + h_pos + v_pos + height +
+get_prior(formula = f0_mean ~ 1 + vowel_s + can_size_s + head_pos + h_pos + v_pos + height + # head_pos and v_pos will be separated
             (1 + vowel_s + can_size_s + head_pos + h_pos + v_pos || speaker),
           data = can,
           family = lognormal())
@@ -713,11 +739,11 @@ mdl_intOnlyH1 <- brm(f0_mean ~ 1,
                    data = can,
                    prior = priors_intOnlyH1,
                    family = lognormal(),
-                   backend = "cmdstanr",
+                   #backend = "cmdstanr", # depends on you
                    cores = 4,
                    chains = 4,
-                   iter = 4000,
-                   warmup = 2000,
+                   iter = 8000,
+                   warmup = 4000,
                    seed = 998,
                    control = list(max_treedepth = 13,
                                   adapt_delta = 0.99),
@@ -729,159 +755,364 @@ mdl_intOnlyH1 <- brm(f0_mean ~ 1,
 mdl_intOnlyH1 <- readRDS(paste0(models, "mdl_intOnlyH1.rds"))
 ```
 
-Let’s check how it looks like.
+Let's check how it looks like.
 
 ```{r}
 summary(mdl_intOnlyH1)
 ```
 
-
 ```{r}
 plot(mdl_intOnlyH1)
 ```
-
 
 ```{r}
 pp_check(mdl_intOnlyH1, ndraws = 100)
 ```
 
-The pp_check shows a slight right-skew and a "bump" around 200 Hz.
+The pp_check shows a slight right-skew and a "bump" around 200 Hz in the raw data which the model does not really respect.
 
-Let’s compute the loo for model comparison.
+Let's compute the loo for model comparison.
 
 ```{r}
 # run loo mdl
 if (file.exists(paste0(models, "mdl_intOnlyH1_loo.rds"))) {
   mdl_intOnlyH1_loo <- readRDS(paste0(models, "mdl_intOnlyH1_loo.rds"))
 } else {
-  mdl_intOnly_loo <- loo(mdl_intOnly)
+  mdl_intOnlyH1_loo <- loo(mdl_intOnlyH1)
   saveRDS(mdl_intOnlyH1_loo, paste0(models, "mdl_intOnlyH1_loo.rds"))
 }
 ```
 
-#### No random slopes
+Check the loo.
 
 ```{r}
-mdl_noRandomH1 <- brm(f0_mean ~ 1 + vowel_s + can_size_s + 
-                      angle + h_pos + v_pos + height +
+mdl_intOnlyH1_loo
+```
+
+#### No random slopes
+
+##### Head position
+
+```{r}
+mdl_noRandomH1_headPos <- brm(f0_mean ~ 1 + vowel_s + can_size_s + 
+                      head_pos + h_pos + height +
                       (1 | speaker),
                    data = can,
                    prior = priors_noRandomH1,
                    family = lognormal(),
-                   backend = "cmdstanr",
+                   #backend = "cmdstanr",
                    cores = 4,
                    chains = 4,
-                   iter = 4000,
-                   warmup = 2000,
-                   seed = 998,
+                   iter = 8000,
+                   warmup = 4000,
+                   seed = 997,
+                   save_pars = save_pars(all = TRUE),
                    control = list(max_treedepth = 13,
                                   adapt_delta = 0.99),
-                   file = paste0(models, "mdl_noRandomH1.rds"))
+                   file = paste0(models, "mdl_noRandomH1_headPos.rds"))
 
 # if we need to compress the model more
-#saveRDS(mdl_noRandomH1, file = paste0(models, "mdl_noRandomH1.rds"), compress = "xz")
+#saveRDS(mdl_noRandomH1_headPos, file = paste0(models, "mdl_noRandomH1_headPos.rds"), compress = "xz")
 
-mdl_noRandomH1 <- readRDS(paste0(models, "mdl_noRandomH1.rds"))
+mdl_noRandomH1_headPos <- readRDS(paste0(models, "mdl_noRandomH1_headPos.rds"))
 ```
 
-Let’s check how it looks like.
+Let's check how it looks like.
 
 ```{r}
-summary(mdl_noRandomH1)
+summary(mdl_noRandomH1_headPos)
 ```
-
 
 ```{r}
-plot(mdl_noRandomH1)
+plot(mdl_noRandomH1_headPos)
 ```
-
 
 ```{r}
-conditional_effects(mdl_noRandomH1, sample_prior = "only")
+conditional_effects(mdl_noRandomH1_headPos, sample_prior = "only")
 ```
-
 
 ```{r}
-pp_check(mdl_noRandomH1, ndraws = 100)
+pp_check(mdl_noRandomH1_headPos, ndraws = 100)
 ```
 
-Let’s compute the loo for model comparison.
+Let's compute the loo for model comparison.
 
 ```{r}
 # run loo mdl
-if (file.exists(paste0(models, "mdl_noRandomH1_loo.rds"))) {
-  mdl_noRandomH1_loo <- readRDS(paste0(models, "mdl_noRandomH1_loo.rds"))
+if (file.exists(paste0(models, "mdl_noRandomH1_headPos_loo.rds"))) {
+  mdl_noRandomH1_headPos_loo <- readRDS(paste0(models, "mdl_noRandomH1_headPos_loo.rds"))
 } else {
-  mdl_noRandomH1_loo <- loo(mdl_noRandomH1)
-  saveRDS(mdl_noRandomH1_loo, paste0(models, "mdl_noRandomH1_loo.rds"))
+  mdl_noRandomH1_headPos_loo <- loo(mdl_noRandomH1_headPos)
+  saveRDS(mdl_noRandomH1_headPos_loo, paste0(models, "mdl_noRandomH1_headPos_loo.rds"))
 }
+```
+
+Check the loo.
+
+```{r}
+mdl_noRandomH1_headPos_loo
+```
+
+See if any [reloo](https://paul-buerkner.github.io/brms/reference/reloo.html) is needed.
+
+```{r}
+if (file.exists(paste0(models, "mdl_noRandomH1_headPos_reloo.rds"))) {
+  mdl_noRandomH1_headPos_reloo <- readRDS(paste0(models, "mdl_noRandomH1_headPos_reloo.rds"))
+} else {
+  mdl_noRandomH1_headPos_reloo <- reloo(mdl_noRandomH1_headPos_loo, mdl_noRandomH1_headPos, chains = 1)
+  saveRDS(mdl_noRandomH1_headPos_reloo, paste0(models, "mdl_noRandomH1_headPos_reloo.rds"))
+}
+
+mdl_noRandomH1_headPos_reloo
+```
+
+##### Vertical position
+
+```{r}
+mdl_noRandomH1_vPos <- brm(f0_mean ~ 1 + vowel_s + can_size_s + 
+                      h_pos + v_pos + height +
+                      (1 | speaker),
+                   data = can,
+                   prior = priors_noRandomH1,
+                   family = lognormal(),
+                   #backend = "cmdstanr",
+                   cores = 4,
+                   chains = 4,
+                   iter = 8000,
+                   warmup = 4000,
+                   seed = 998,
+                   control = list(max_treedepth = 13,
+                                  adapt_delta = 0.99),
+                   file = paste0(models, "mdl_noRandomH1_vPos.rds"))
+
+# if we need to compress the model more
+#saveRDS(mdl_noRandomH1_vPos, file = paste0(models, "mdl_noRandomH1_vPos.rds"), compress = "xz")
+
+mdl_noRandomH1_vPos <- readRDS(paste0(models, "mdl_noRandomH1_vPos.rds"))
+```
+
+Let's check how it looks like.
+
+```{r}
+summary(mdl_noRandomH1_vPos)
+```
+
+```{r}
+plot(mdl_noRandomH1_vPos)
+```
+
+```{r}
+conditional_effects(mdl_noRandomH1_vPos, sample_prior = "only")
+```
+
+```{r}
+pp_check(mdl_noRandomH1_vPos, ndraws = 100)
+```
+
+Let's compute the loo for model comparison.
+
+```{r}
+# run loo mdl
+if (file.exists(paste0(models, "mdl_noRandomH1_vPos_loo.rds"))) {
+  mdl_noRandomH1_vPos_loo <- readRDS(paste0(models, "mdl_noRandomH1_vPos_loo.rds"))
+} else {
+  mdl_noRandomH1_vPos_loo <- loo(mdl_noRandomH1_vPos)
+  saveRDS(mdl_noRandomH1_vPos_loo, paste0(models, "mdl_noRandomH1_vPos_loo.rds"))
+}
+```
+
+Check the loo.
+
+```{r}
+mdl_noRandomH1_vPos_loo
 ```
 
 #### Maximal model
 
+##### Head position
+
 ```{r}
-mdl_maxH1 <- brm(f0_mean ~ 1 + vowel_s + can_size_s + 
-                      angle + h_pos + v_pos + height +
+mdl_maxH1_headPos <- brm(f0_mean ~ 1 + vowel_s + can_size_s + 
+                      head_pos + h_pos + height +
                       (1 + vowel_s + can_size_s + 
-                         angle + h_pos + v_pos || speaker),
+                         head_pos + h_pos || speaker),
                    data = can,
                    prior = priors_maxH1,
                    family = lognormal(),
-                   backend = "cmdstanr",
+                   #backend = "cmdstanr",
                    cores = 4,
                    chains = 4,
-                   iter = 4000,
-                   warmup = 2000,
+                   iter = 8000,
+                   warmup = 4000,
                    seed = 998,
+                   save_pars = save_pars(all = TRUE),
                    control = list(max_treedepth = 13,
                                   adapt_delta = 0.99),
-                   file = paste0(models, "mdl_maxH1.rds"))
+                   file = paste0(models, "mdl_maxH1_headPos.rds"))
 
 # if we need to compress the model more
-#saveRDS(mdl_maxH1, file = paste0(models, "mdl_maxH1.rds"), compress = "xz")
+#saveRDS(mdl_maxH1_headPos, file = paste0(models, "mdl_maxH1_headPos.rds"), compress = "xz")
 
-mdl_maxH1 <- readRDS(paste0(models, "mdl_maxH1.rds"))
+mdl_maxH1_headPos <- readRDS(paste0(models, "mdl_maxH1_headPos.rds"))
+
+beepr::beep()
 ```
 
-Let’s check how it looks like.
+Let's check how it looks like.
 
 ```{r}
-summary(mdl_maxH1)
+summary(mdl_maxH1_headPos)
 ```
-
 
 ```{r}
-plot(mdl_maxH1)
+plot(mdl_maxH1_headPos)
 ```
-
 
 ```{r}
-conditional_effects(mdl_maxH1, sample_prior = "only")
+conditional_effects(mdl_maxH1_headPos, sample_prior = "only")
 ```
-
 
 ```{r}
-pp_check(mdl_maxH1, ndraws = 100)
+pp_check(mdl_maxH1_headPos, ndraws = 100)
 ```
 
-Let’s compute the loo for model comparison.
+Let's compute the loo for model comparison.
 
 ```{r}
 # run loo mdl
-if (file.exists(paste0(models, "mdl_maxH1_loo.rds"))) {
-  mdl_maxH1_loo <- readRDS(paste0(models, "mdl_maxH1_loo.rds"))
+if (file.exists(paste0(models, "mdl_maxH1_headPos_loo.rds"))) {
+  mdl_maxH1_headPos_loo <- readRDS(paste0(models, "mdl_maxH1_headPos_loo.rds"))
 } else {
-  mdl_maxH1_loo <- loo(mdl_maxH1)
-  saveRDS(mdl_maxH1_loo, paste0(models, "mdl_maxH1_loo.rds"))
+  mdl_maxH1_headPos_loo <- loo(mdl_maxH1_headPos, moment_match = TRUE)
+  saveRDS(mdl_maxH1_headPos_loo, paste0(models, "mdl_maxH1_headPos_loo.rds"))
 }
+```
+
+Check the loo.
+
+```{r}
+mdl_maxH1_headPos_loo
+```
+
+See if any [reloo](https://paul-buerkner.github.io/brms/reference/reloo.html) is needed.
+
+```{r}
+if (file.exists(paste0(models, "mdl_maxH1_headPos_reloo.rds"))) {
+  mdl_maxH1_headPos_reloo <- readRDS(paste0(models, "mdl_maxH1_headPos_reloo.rds"))
+} else {
+  mdl_maxH1_headPos_reloo <- reloo(mdl_maxH1_headPos_loo, mdl_maxH1_headPos, chains = 1)
+  saveRDS(mdl_maxH1_headPos_reloo, paste0(models, "mdl_maxH1_headPos_reloo.rds"))
+}
+
+mdl_maxH1_headPos_reloo
+```
+
+##### Vertical position
+
+```{r}
+mdl_maxH1_vPos <- brm(f0_mean ~ 1 + vowel_s + can_size_s + 
+                      h_pos + v_pos + height +
+                      (1 + vowel_s + can_size_s + 
+                         h_pos + v_pos || speaker),
+                   data = can,
+                   prior = priors_maxH1,
+                   family = lognormal(),
+                   #backend = "cmdstanr",
+                   cores = 4,
+                   chains = 4,
+                   iter = 8000,
+                   warmup = 4000,
+                   seed = 998,
+                   save_pars = save_pars(all = TRUE),
+                   control = list(max_treedepth = 13,
+                                  adapt_delta = 0.99),
+                   file = paste0(models, "mdl_maxH1_vPos.rds"))
+
+# if we need to compress the model more
+#saveRDS(mdl_maxH1_vPos, file = paste0(models, "mdl_maxH1_vPos.rds"), compress = "xz")
+
+mdl_maxH1_vPos <- readRDS(paste0(models, "mdl_maxH1_vPos.rds"))
+
+beepr::beep()
+```
+
+Let's check how it looks like.
+
+```{r}
+summary(mdl_maxH1_vPos)
+```
+
+```{r}
+plot(mdl_maxH1_vPos)
+```
+
+```{r}
+conditional_effects(mdl_maxH1_vPos, sample_prior = "only")
+```
+
+```{r}
+pp_check(mdl_maxH1_vPos, ndraws = 100)
+```
+
+Let's compute the loo for model comparison.
+
+```{r}
+# run loo mdl
+if (file.exists(paste0(models, "mdl_maxH1_vPos_loo.rds"))) {
+  mdl_maxH1_vPos_loo <- readRDS(paste0(models, "mdl_maxH1_vPos_loo.rds"))
+} else {
+  mdl_maxH1_vPos_loo <- loo(mdl_maxH1_vPos, moment_match = TRUE)
+  saveRDS(mdl_maxH1_vPos_loo, paste0(models, "mdl_maxH1_vPos_loo.rds"))
+}
+```
+
+Check the loo.
+
+```{r}
+mdl_maxH1_vPos_loo
+```
+
+See if any [reloo](https://paul-buerkner.github.io/brms/reference/reloo.html) is needed.
+
+```{r}
+if (file.exists(paste0(models, "mdl_maxH1_vPos_reloo.rds"))) {
+  mdl_maxH1_vPos_reloo <- readRDS(paste0(models, "mdl_maxH1_vPos_reloo.rds"))
+} else {
+  mdl_maxH1_vPos_reloo <- reloo(mdl_maxH1_vPos_loo, mdl_maxH1_vPos, chains = 1)
+  saveRDS(mdl_maxH1_vPos_reloo, paste0(models, "mdl_maxH1_vPos_reloo.rds"))
+}
+
+mdl_maxH1_vPos_reloo
 ```
 
 #### Model comparison
 
+We computed a set of models from integer only, to a maximal model. We will compare them now, but still adhereing to head position vs. vertical position separately. 
+
+##### Head position models
+
+```{r}
+compH1_headPos <- loo_compare(mdl_intOnlyH1_loo,mdl_noRandomH1_headPos_reloo,mdl_maxH1_headPos_reloo)
+compH1_headPos
+```
+
+As expected, the maximal model is the best estimate. We will proceed with extracting the effects from this model.
+
+##### Vertical position models
+
+```{r}
+compH1_vPos <- loo_compare(mdl_intOnlyH1_loo,mdl_noRandomH1_vPos_loo,mdl_maxH1_vPos_reloo)
+compH1_vPos
+```
+
+As expected, the maximal model is the best estimate. We will proceed with extracting the effects from this model.
+
+### Analysis of best-fit models
+
+We found that the best-fit models are the maximal models. Now we will extract the predictions from the models.
+
+#### Head-position
 
 
 
 # Jaw opening
-
-
-
