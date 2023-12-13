@@ -50,6 +50,7 @@ library(brms)
 options(mc.cores = parallel::detectCores())
 library(HDInterval) # package for credible interval computation
 library(tidybayes) # plotting
+library(brmstools) # forest plot
 library(phonR) # for formant plots
 
 # Use a colorblind-friendly palette
@@ -167,7 +168,8 @@ Select only necessary columns and rename them:
 ```{r}
 can <- can %>%
   mutate(
-    f0_range = max_f0 - min_f0
+    f0_range = max_f0 - min_f0,
+    y_mg_mean = y_mg_mean*100
     ) %>%
   select(
     subject, part, size, v.pos, h.pos, text, start, duration, 
@@ -249,14 +251,14 @@ Check how the outlier removal impacted the data. First, the amount of NAs.
 
 ```{r}
 # Combine the results into a data frame
-na_summary <- data.frame(
+na_summary_phon <- data.frame(
   NA_Count_Pre_Removal = colSums(is.na(can[, columns_to_process])),
   NA_Count_Post_Removal = colSums(is.na(can_grouped[, columns_to_process])),
   NA_Perc_Pre_Removal = (colSums(is.na(can[, columns_to_process])) / nrow(can)) * 100,
   NA_Perc_Post_Removal = (colSums(is.na(can_grouped[, columns_to_process])) / nrow(can_grouped)) * 100
 )
 
-na_summary
+na_summary_phon
 ```
 
 Then, look at the means. When looking at the table, it's best to sort by speaker to see where there was a change.
@@ -275,7 +277,7 @@ means_can_grouped <- can_grouped %>%
   ungroup()
 
 # Combine the means into a single summary table
-outlier_summary <- bind_rows(
+outlier_summary_acc <- bind_rows(
   tibble(Variable = "Pre-Removal", means_can),
   tibble(Variable = "Post-Removal", means_can_grouped)
 )
@@ -288,6 +290,82 @@ can <- can_grouped
 rm(can_grouped, means_can, means_can_grouped)
 rm(columns_to_process)
 ```
+
+We will do the same, but for the kinematic variables. Here, we will only group by speaker.
+
+```{r}
+# Columns to process
+columns_to_process <- c("head_pos", "angle", "lip_dist")
+
+# Group by Language and Participant and then loop through each column
+can_grouped <- can %>%
+  group_by(speaker) %>%
+  mutate(across(all_of(columns_to_process), .fns = ~{
+    cat("Processing column:", deparse(substitute(.)), "\n")
+    
+    # Calculate IQR
+    Q1 <- quantile(.x, 0.25, na.rm = TRUE)
+    Q3 <- quantile(.x, 0.75, na.rm = TRUE)
+    IQR <- Q3 - Q1
+    
+    # Define lower and upper bounds for outliers
+    lower_bound <- Q1 - 2 * IQR
+    upper_bound <- Q3 + 2 * IQR
+    
+    # Identify outliers
+    outliers <- .x < lower_bound | .x > upper_bound
+    
+    # Replace outliers with NA
+    .x[outliers] <- NA
+    .x
+  })) %>% 
+  ungroup()
+```
+
+Check how the outlier removal impacted the data. First, the amount of NAs.
+
+```{r}
+# Combine the results into a data frame
+na_summary_kin <- data.frame(
+  NA_Count_Pre_Removal = colSums(is.na(can[, columns_to_process])),
+  NA_Count_Post_Removal = colSums(is.na(can_grouped[, columns_to_process])),
+  NA_Perc_Pre_Removal = (colSums(is.na(can[, columns_to_process])) / nrow(can)) * 100,
+  NA_Perc_Post_Removal = (colSums(is.na(can_grouped[, columns_to_process])) / nrow(can_grouped)) * 100
+)
+
+na_summary_kin
+```
+
+Then, look at the means. When looking at the table, it's best to sort by speaker to see where there was a change.
+
+```{r}
+# Calculate means for each variable in the pre-removal dataset
+means_can <- can %>%
+  group_by(speaker) %>%
+  summarise(across(all_of(columns_to_process), mean, na.rm = TRUE)) %>% 
+  ungroup()
+
+# Calculate means for each variable in the post-removal dataset
+means_can_grouped <- can_grouped %>%
+  group_by(speaker) %>%
+  summarise(across(all_of(columns_to_process), mean, na.rm = TRUE)) %>% 
+  ungroup()
+
+# Combine the means into a single summary table
+outlier_summary_kin <- bind_rows(
+  tibble(Variable = "Pre-Removal", means_can),
+  tibble(Variable = "Post-Removal", means_can_grouped)
+)
+```
+
+After inspecting the outlier removal, change the name back to can and remove the unnecessary data frames.
+
+```{r}
+can <- can_grouped
+rm(can_grouped, means_can, means_can_grouped)
+rm(columns_to_process)
+```
+
 
 ## Adding z-scores for plotting
 
@@ -357,13 +435,13 @@ can <- can %>%
 
 People differ in the SD of the head position and thus head angle. This suggests there are some who move their head more, and some who move their head less.
 
-The idea is to group speakers into movers and non-movers by looking at the SD of the mean head angle:
+The idea is to group speakers into movers and non-movers by looking at the SD of the mean head position:
 
 ```{r}
 can %>% 
   group_by(speaker) %>%
-  summarize_at(vars(angle), list(mean = mean, sd = sd))%>% 
-  {. ->> speakers_angle} %>% 
+  summarize_at(vars(head_pos), list(mean = ~mean(., na.rm = TRUE), sd = ~sd(., na.rm = TRUE))) %>% 
+  {. ->> speakers_pos} %>% 
   ungroup() %>% 
   print(n = Inf)
 ```
@@ -371,21 +449,21 @@ can %>%
 Check mean of SD to estimate point of division:
 
 ```{r}
-mean(speakers_angle$sd)
+mean(speakers_pos$sd)
 ```
 
-Group of movers with SD above 2.5:
+Group of movers with SD above 1.12:
 
 ```{r}
-filter(speakers_angle, sd > 2.5)
+filter(speakers_pos, sd > 1.123773)
 ```
 
 N = 13
 
-Group of non-movers with SD below 2.5:
+Group of non-movers with SD below 1.12:
 
 ```{r}
-filter(speakers_angle, sd < 2.5)
+filter(speakers_pos, sd < 1.123773)
 ```
 
 N = 17
@@ -394,19 +472,22 @@ Add a categorical variable mover/non-mover:
 
 ```{r, message = FALSE}
 can <- left_join(can,
-                    can %>% 
-                      group_by(speaker) %>%
-                      summarize_at(vars(angle), list(mean_angle = mean, sd_angle = sd)) %>% 
-                      mutate(mover = ifelse(sd_angle < 2.5, 'no', 'yes')) %>%
-                      ungroup())
+                 can %>% 
+                   group_by(speaker) %>%
+                   summarize_at(vars(head_pos),
+                                list(mean_pos = ~ mean(., na.rm = TRUE),
+                                     sd_pos = ~ sd(., na.rm = TRUE)),
+                                na.rm = TRUE) %>% 
+                   mutate(mover = ifelse(sd_pos < 1.123773, 'no', 'yes')) %>%
+                   ungroup())
 ```
 
 Calculate the difference between the actual angle and the speaker's mean to plot it later:
 
 ```{r}
 can <- can %>% 
-  mutate(angle_difference = angle - mean_angle) %>% 
-  select(-c(sd_angle, mean_angle)) # deselect unneded variables
+  mutate(pos_difference = head_pos - mean_pos) %>% 
+  select(-c(sd_pos, mean_pos)) # deselect unneded variables
 ```
 
 ## Prepare formants
@@ -492,6 +573,20 @@ can_formants_aside <- mutate(can_formants_aside,
 )
 ```
 
+## Contrast-code
+
+Contrast code vowel, can_size, and mover (the latter just in case) and store as separate vectors:
+
+```{r}
+can <- can %>%
+  mutate(
+    vowel_s = if_else(vowel == "I", -0.5, 0.5),
+    can_size_s = if_else(can_size == "small", -0.5, 0.5),
+    mover_s = if_else(mover == "no", -0.5, 0.5)
+  )
+```
+
+
 # Initial descriptive statistics
 
 How many speakers?
@@ -536,6 +631,15 @@ Check means of kinematic variables per speaker:
 ```{r}
 print(speakers_kin, n = 60)
 ```
+
+# Export dataset
+
+Let's export the csv. 
+
+```{r}
+write.csv(can, paste0(data, "can.csv"), row.names = FALSE)
+```
+
 
 # Head position
 
@@ -605,7 +709,7 @@ f0_angle <- ggplot(can,
 grid.arrange(f0_head_pos, f0_angle, ncol = 2)
 ```
 
-Visually, they are basically the same. I think it is better to go with head position then, becasue it captures exactly the movement of interest.
+Visually, they are basically the same. I think it is better to go with head position then, because it captures exactly the movement of interest.
 
 ## Head position vs. vertical position
 
@@ -638,19 +742,6 @@ Given the correlation, we should not put them in the same model. We will have to
 Here, I'm computing a model that estimates the probability of an effect of head position (among others) on *f*0. The first iteration of this analysis was done with the help of Timo Roettger. Since then, however, the analysis has been upgraded with the comments of three anonymous reviewers and Bodo Winter.
 
 ------------------------------------------------------------------------
-
-### Contrast-code
-
-Contrast code vowel, can_size, and mover (the latter just in case) and store as separate vectors:
-
-```{r}
-can <- can %>%
-  mutate(
-    vowel_s = if_else(vowel == "I", -0.5, 0.5),
-    can_size_s = if_else(can_size == "small", -0.5, 0.5),
-    mover_s = if_else(mover == "no", -0.5, 0.5)
-  )
-```
 
 ### Priors
 
@@ -800,7 +891,7 @@ mdl_noRandomH1_headPos <- brm(f0_mean ~ 1 + vowel_s + can_size_s +
                    data = can,
                    prior = priors_noRandomH1,
                    family = lognormal(),
-                   #backend = "cmdstanr",
+                   backend = "cmdstanr",
                    cores = 4,
                    chains = 4,
                    iter = 8000,
@@ -851,19 +942,6 @@ Check the loo.
 
 ```{r}
 mdl_noRandomH1_headPos_loo
-```
-
-See if any [reloo](https://paul-buerkner.github.io/brms/reference/reloo.html) is needed.
-
-```{r}
-if (file.exists(paste0(models, "mdl_noRandomH1_headPos_reloo.rds"))) {
-  mdl_noRandomH1_headPos_reloo <- readRDS(paste0(models, "mdl_noRandomH1_headPos_reloo.rds"))
-} else {
-  mdl_noRandomH1_headPos_reloo <- reloo(mdl_noRandomH1_headPos_loo, mdl_noRandomH1_headPos, chains = 1)
-  saveRDS(mdl_noRandomH1_headPos_reloo, paste0(models, "mdl_noRandomH1_headPos_reloo.rds"))
-}
-
-mdl_noRandomH1_headPos_reloo
 ```
 
 ##### Vertical position
@@ -939,7 +1017,7 @@ mdl_maxH1_headPos <- brm(f0_mean ~ 1 + vowel_s + can_size_s +
                    data = can,
                    prior = priors_maxH1,
                    family = lognormal(),
-                   #backend = "cmdstanr",
+                   backend = "cmdstanr",
                    cores = 4,
                    chains = 4,
                    iter = 8000,
@@ -1092,7 +1170,7 @@ We computed a set of models from integer only, to a maximal model. We will compa
 ##### Head position models
 
 ```{r}
-compH1_headPos <- loo_compare(mdl_intOnlyH1_loo,mdl_noRandomH1_headPos_reloo,mdl_maxH1_headPos_reloo)
+compH1_headPos <- loo_compare(mdl_noRandomH1_headPos_loo,mdl_maxH1_headPos_reloo)
 compH1_headPos
 ```
 
@@ -1113,6 +1191,1242 @@ We found that the best-fit models are the maximal models. Now we will extract th
 
 #### Head-position
 
+We would expect:
+
+- vowel_s to have a negative effect on f0_mean, because -0.5 is [i], and 0.5 is [a], and [i] should have higher intrinsic *f*0
+- head_pos to have a positive effect on f0_mean, because with increasing head_pos we raise that *f*0 
+- height might have a negative effect on f0_mean, because taller people might have lower *f*0
+- can_size_s might have a negative effect on f0_mean, because -0.5 is small, and 0.5 is large, and small might induce higher *f*0 (but this is speculative)
+- h_pos might have a positive effect on f0_mean, because of the musical SNARC effect and the keys on the keyboard being low on the left and high on the right, so going from 1 to 5 *f*0 could increase (but this is speculative)
+
+First, let's look at the summary again.
+
+```{r}
+summary(mdl_maxH1_headPos)
+```
+
+Now let's check the hypotheses using brms function.
+
+```{r}
+hypothesis(mdl_maxH1_headPos, "vowel_s < 0")
+plot(hypothesis(mdl_maxH1_headPos, "vowel_s < 0"))
+```
+
+The assumption holds for vowel: [i] has a higher means *f*0.
+
+```{r}
+hypothesis(mdl_maxH1_headPos, "head_pos > 0")
+plot(hypothesis(mdl_maxH1_headPos, "head_pos > 0"))
+```
+
+The assumption holds for head_pos: upward head movement induces an increas in *f*0.
+
+```{r}
+hypothesis(mdl_maxH1_headPos, "height < 0")
+plot(hypothesis(mdl_maxH1_headPos, "height < 0"))
+```
+
+The assumption does hold for height in our data: taller participants tend to have lower *f*0 means in vowel intervals.
+
+```{r}
+hypothesis(mdl_maxH1_headPos, "can_size_s < 0")
+plot(hypothesis(mdl_maxH1_headPos, "can_size_s < 0"))
+```
+
+The assumption does not hold for can_size in our data: larger cans do not generally induce higher *f*0 means in vowel intervals.
+
+```{r}
+hypothesis(mdl_maxH1_headPos, "h_pos > 0")
+plot(hypothesis(mdl_maxH1_headPos, "h_pos > 0"))
+```
+
+The assumption does not hold for h_pos in our data: an increase in the horizontal position from left to right does not generally induce higher *f*0 means in vowel intervals.
+
+That is generally super exciting and means that our hypothesis checks out! Head position has an effect on the *f*0 mean.
+
+Change to report:
+
+```{r}
+summary(can$head_pos) # the unit is centimeters
+
+exp(fixef(mdl_maxH1_headPos))
+
+exp(fixef(mdl_maxH1_headPos)[1,1]) # intercept in Hz
+exp(fixef(mdl_maxH1_headPos)[4,1]) # estimate head_pos in Hz (positive)
+exp(fixef(mdl_maxH1_headPos)[2,1]) # estimate vowel_s in Hz (negative)
+```
+
+All hypotheses tested together:
+
+```{r}
+hypothesis(mdl_maxH1_headPos, c("vowel_s < 0", "head_pos > 0", "height < 0", "can_size_s < 0", "h_pos > 0"))
+plot(hypothesis(mdl_maxH1_headPos, c("vowel_s < 0", "head_pos > 0", "height < 0", "can_size_s < 0", "h_pos > 0")))
+```
+
+
+#### Vertical position
+
+We expect the other effects to be the same, except for:
+
+- v_pos should have a negative effect on f0_mean, because position 1 is on the top and 5 is on the bottom, thus, with increasing v_pos, *f*0 should decrease
+
+First, let's look at the summary again.
+
+```{r}
+summary(mdl_maxH1_vPos)
+```
+
+Now let's check the hypotheses using brms function.
+
+```{r}
+hypothesis(mdl_maxH1_vPos, "vowel_s < 0")
+plot(hypothesis(mdl_maxH1_vPos, "vowel_s < 0"))
+```
+
+The assumption holds for vowel: [i] has a higher means *f*0.
+
+```{r}
+hypothesis(mdl_maxH1_vPos, "v_pos < 0")
+plot(hypothesis(mdl_maxH1_vPos, "v_pos < 0"))
+```
+
+The assumption holds for head_pos: upward head movement induces an increas in *f*0.
+
+```{r}
+hypothesis(mdl_maxH1_vPos, "height < 0")
+plot(hypothesis(mdl_maxH1_vPos, "height < 0"))
+```
+
+The assumption does not hold for height in our data: higher participants do not generally have higher *f*0 means in vowel intervals.
+
+```{r}
+hypothesis(mdl_maxH1_vPos, "can_size_s < 0")
+plot(hypothesis(mdl_maxH1_vPos, "can_size_s < 0"))
+```
+
+The assumption does not hold for can_size in our data, but it is by a thread!: larger cans do not generally induce higher *f*0 means in vowel intervals.
+
+```{r}
+hypothesis(mdl_maxH1_vPos, "h_pos > 0")
+plot(hypothesis(mdl_maxH1_vPos, "h_pos > 0"))
+```
+
+The assumption does not hold for h_pos in our data: an increase in the horizontal position from left to right does not generally induce higher *f*0 means in vowel intervals.
+
+Therefore, we also see an effect of vertical position on *f*0 mean.
+
+Change to report:
+
+```{r}
+summary(can$v_pos)
+
+exp(fixef(mdl_maxH1_vPos))
+
+exp(fixef(mdl_maxH1_vPos)[1,1]) # intercept in Hz
+exp(fixef(mdl_maxH1_vPos)[5,1]) # estimate v_pos in Hz (positive)
+exp(fixef(mdl_maxH1_vPos)[2,1]) # estimate vowel_s in Hz (negative)
+```
+
+All hypotheses tested together:
+
+```{r}
+hypothesis(mdl_maxH1_vPos, c("vowel_s < 0", "v_pos < 0", "height < 0", "can_size_s < 0", "h_pos > 0"))
+plot(hypothesis(mdl_maxH1_vPos, c("vowel_s < 0", "v_pos < 0", "height < 0", "can_size_s < 0", "h_pos > 0")))
+```
+
+
+----
+
+#### Summary
+
+Taken together, we see that in both models, vowel has a reliable effect, which is our logical control. Importantly, our hypothesis holds, we find a reliable effect of head position on *f*0, whereby each 1 cm change in the predictor induces 1 Hz change in the outcome variable. This really is something, given the range of head movement within speaker.
+
+```{r}
+can %>%
+  group_by(speaker) %>%
+  summarize(head_range = max(head_pos, na.rm = TRUE) - min(head_pos, na.rm = TRUE)) %>%
+  ungroup() %>%
+  {. ->> head_range} %>%
+  print(n = 30)
+```
+
+Given the various head movement behavior, we can also expect big inter-speaker variance.
+
+```{r}
+brmstools::forest(mdl_maxH1_headPos, 
+                  grouping = "speaker", 
+                  pars = "head_pos", 
+                  digits = 0,
+                  sort = T)
+```
+
+The effect is present across all speakers. It would be nice to see how this relates to being mover or non-mover.
+
+```{r}
+p_hPos_mover <- mdl_maxH1_headPos %>%
+  spread_draws(b_Intercept, b_head_pos, r_speaker[speaker,term]) %>%
+  filter(term == "head_pos") %>% 
+  mutate(mu = b_head_pos + r_speaker) %>% 
+  ungroup() %>%
+  mutate(speaker = str_replace_all(speaker, "[.]", " ")) %>%
+  mutate(speaker = as.double(speaker)) %>% 
+  left_join(can %>% select(speaker, mover), by = "speaker") %>%
+  ggplot(aes(x = mu, y = reorder(speaker, mu), fill = mover)) +
+    geom_halfeyeh(.width = .5, size = 2/3, alpha = 0.5) +  # Adjusted alpha for fill color
+    scale_fill_manual(values = colorBlindBlack8) +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "grey") +  # Grey dashed line at 0
+    labs(x = "Posterior distribution (Head position)", y = "Speaker", fill = "Mover") +
+    theme_minimal()
+
+p_hPos_mover
+
+ggsave(file = paste0(plots, "p_hPos_mover.svg"), plot = p_hPos_mover, width = 10, height = 8)
+
+# this is very memory-consuming, so run this to kind of "reset"
+gc()
+
+```
+
+This shows that being a mover has nothing to do with the effect. Person 7 shows the strongest effect and she is a mover, but person 2 is not a mover and her effect is second. So the effect is equally strong in people, who move less.
+
+
+We had to separate head position and vertical position due to their correlation and calculate separate models. The effect of vertical position that we found is reliable, but translated to real-world terms, much weaker. For 1 step change in vertical position, we find roughly 1 Hz change. But since our plane only comprised of 5 steps, which were projected on the surface of 1,30 meters, this is much weaker an effect than we exposed for head position.
+
+Most likely, the effect we find for vertical position is the one induced through head movement --HOW to show?
+
+## Plots
+
+Having raw and posterior values, we can show the effects visually.
+
+### Head position
+
+Scatter plot with regression lines: *f*0 mean x head position
+
+```{r}
+ggplot(can, aes(x = head_pos, y = f0_mean, color = factor(vowel))) +
+    geom_point(alpha = 0.5) +
+    stat_smooth(method = "lm", se = TRUE) +
+    labs(color = "Vowel", x = "Head Position (cm)", y = "f0 Mean (Hz)") +
+    theme_minimal() +
+    scale_color_manual(values = colorBlindBlack8)
+```
+
+Posterior distribution
+
+```{r}
+# Extracting posterior samples 
+post_maxH1_headPos <- mdl_maxH1_headPos %>% 
+  gather_draws(b_vowel_s, b_can_size_s, b_head_pos, b_h_pos, b_height) 
+
+# Plotting intervals with densities
+postplot_maxH1_headPos <- 
+  ggplot(post_maxH1_headPos, 
+         aes(x = .value, y = .variable)) +
+  stat_halfeye(.width = 0.95, fill = colorBlindBlack8[2], alpha = 0.7, size = 2) +
+  geom_segment(x = 0, xend = 0, y = -Inf, yend = Inf,
+               linetype = "dashed", color = "grey", size = 1) + 
+  theme_bw() +
+  labs(x = "Posterior density", y = "Variable") +
+  scale_y_discrete(labels = c("Can size", "Head position", "Height", "Horizontal pos.", "Vowel")) + # Must be in alphabetical order
+  scale_x_continuous(limits = c(-0.12, 0.02))
+
+postplot_maxH1_headPos
+```
+
+
+
+
+### Vertical position
+
+Scatter plot with regression lines: *f*0 mean x vertical position
+
+```{r}
+ggplot(can, aes(x = v_pos, y = f0_mean, color = factor(vowel))) +
+    geom_point(alpha = 0.5) +
+    stat_smooth(method = "lm", se = TRUE) +
+    labs(color = "Vowel", x = "Vertical Position", y = "f0 Mean (Hz)") +
+    theme_minimal() +
+    scale_color_manual(values = colorBlindBlack8)
+
+```
+
+
+
+Posterior distribution
+
+```{r}
+# Extracting posterior samples 
+post_maxH1_vPos <- mdl_maxH1_vPos %>% 
+  gather_draws(b_vowel_s, b_can_size_s, b_v_pos, b_h_pos, b_height) 
+
+# Plotting intervals with densities
+postplot_maxH1_vPos <- 
+  ggplot(post_maxH1_vPos, 
+         aes(x = .value, y = .variable)) +
+  stat_halfeye(.width = 0.95, fill = colorBlindBlack8[2], alpha = 0.7, size = 2) +
+  geom_segment(x = 0, xend = 0, y = -Inf, yend = Inf,
+               linetype = "dashed", color = "grey", size = 1) + 
+  theme_bw() +
+  labs(x = "Posterior density", y = "Variable") +
+  scale_y_discrete(labels = c("Can size", "Height", "Horizontal pos.", "Vertical pos.", "Vowel")) + # Must be in alphabetical order
+  scale_x_continuous(limits = c(-0.13, 0.01))
+
+postplot_maxH1_vPos
+```
 
 
 # Jaw opening
+
+## Calculate area
+
+The idea is to calculate the area of vowel space per speaker per size and compare the areas for large vs. small cans with a simple t-test to have an initial test of the hypothesis.
+
+Solution found here: https://stackoverflow.com/questions/38782051/how-to-calculate-the-area-of-ellipse-drawn-by-ggplot2
+
+Filter vowels and sizes to make plots and ellipsis calculations correct.
+
+```{r}
+formants_a_large <- can %>% 
+  filter(vowel == "a") %>% 
+  filter(.,can_size == 'large')
+formants_a_small <- can %>% 
+  filter(vowel == "a") %>% 
+  filter(.,can_size == 'small')
+formants_i_large <- can %>% 
+  filter(vowel == "I") %>% 
+  filter(.,can_size == 'large')
+formants_i_small <- can %>% 
+  filter(vowel == "I") %>% 
+  filter(.,can_size == 'small')
+```
+
+### Vowel a and size large
+
+Plot object
+
+```{r}
+area_a_large = ggplot(formants_a_large,
+            aes(y = F1,
+                x = F2)) +
+  geom_point() +
+  stat_ellipse(segments = 201) # Default is 51. We use a finer grid for more accurate area.
+```
+
+Get ellipse coordinates from plot
+
+```{r}
+pb = ggplot_build(area_a_large)
+el = pb$data[[2]][c("x", "y")]
+```
+
+Center of ellipse
+
+```{r}
+ctr = MASS::cov.trob(el)$center  # Per @Roland's comment
+```
+
+Calculate distance to center from each point on the ellipse
+
+```{r}
+dist2center <- sqrt(rowSums((t(t(el) - ctr))^2))
+```
+
+Calculate area of ellipse from semi-major and semi-minor axes. 
+These are, respectively, the largest and smallest values of dist2center. 
+
+```{r}
+area_a_large <- pi*min(dist2center)*max(dist2center)
+area_a_large
+```
+
+### Vowel a and size small
+
+Plot object
+
+```{r}
+area_a_small = ggplot(formants_a_small,
+            aes(y = F1,
+                x = F2)) +
+  geom_point() +
+  stat_ellipse(segments = 201) # Default is 51. We use a finer grid for more accurate area.
+```
+
+Get ellipse coordinates from plot
+
+```{r}
+pb = ggplot_build(area_a_small)
+el = pb$data[[2]][c("x", "y")]
+```
+
+Center of ellipse
+
+```{r}
+ctr = MASS::cov.trob(el)$center  # Per @Roland's comment
+```
+
+Calculate distance to center from each point on the ellipse
+
+```{r}
+dist2center <- sqrt(rowSums((t(t(el) - ctr))^2))
+```
+
+Calculate area of ellipse from semi-major and semi-minor axes. 
+These are, respectively, the largest and smallest values of dist2center. 
+
+```{r}
+area_a_small <- pi*min(dist2center)*max(dist2center)
+area_a_small
+```
+
+### Vowel i and size large
+
+Plot object
+
+```{r}
+area_i_large = ggplot(formants_i_large,
+            aes(y = F1,
+                x = F2)) +
+  geom_point() +
+  stat_ellipse(segments = 201) # Default is 51. We use a finer grid for more accurate area.
+```
+
+Get ellipse coordinates from plot
+
+```{r}
+pb = ggplot_build(area_i_large)
+el = pb$data[[2]][c("x", "y")]
+```
+
+Center of ellipse
+
+```{r}
+ctr = MASS::cov.trob(el)$center  # Per @Roland's comment
+```
+
+Calculate distance to center from each point on the ellipse
+
+```{r}
+dist2center <- sqrt(rowSums((t(t(el) - ctr))^2))
+```
+
+Calculate area of ellipse from semi-major and semi-minor axes. 
+These are, respectively, the largest and smallest values of dist2center. 
+
+```{r}
+area_i_large <- pi*min(dist2center)*max(dist2center)
+area_i_large
+```
+
+### Vowel i and size small
+
+Plot object
+
+```{r}
+area_i_small = ggplot(formants_i_small,
+            aes(y = F1,
+                x = F2)) +
+  geom_point() +
+  stat_ellipse(segments = 201) # Default is 51. We use a finer grid for more accurate area.
+```
+
+Get ellipse coordinates from plot
+
+```{r}
+pb = ggplot_build(area_i_small)
+el = pb$data[[2]][c("x", "y")]
+```
+
+Center of ellipse
+
+```{r}
+ctr = MASS::cov.trob(el)$center  # Per @Roland's comment
+```
+
+Calculate distance to center from each point on the ellipse
+
+```{r}
+dist2center <- sqrt(rowSums((t(t(el) - ctr))^2))
+```
+
+Calculate area of ellipse from semi-major and semi-minor axes. 
+These are, respectively, the largest and smallest values of dist2center. 
+
+```{r}
+area_i_small <- pi*min(dist2center)*max(dist2center)
+area_i_small
+```
+
+#### T-test
+
+Create tibble from areas
+
+```{r}
+areas <- tribble(
+  ~size_large, ~size_small,
+  area_a_large, area_a_small,
+  area_i_large, area_i_small)
+```
+
+And run a t.test on areas
+
+```{r}
+t.test(areas$size_large, areas$size_small, paired = T)
+
+```
+
+t-test shows no difference between the vowel space of small and large cans.
+
+Remove unused variables
+
+```{r}
+rm(area_a_large,area_a_small,area_i_large,area_i_small,ctr,dist2center,pb,el)
+```
+
+
+## Calculate dispersion
+
+As per reviewer comment, I will calculate formant dispersion and use it for a separate model.
+
+```{r}
+can <- can %>%
+  mutate(f_disp = ((F2 - F1) + (F3 - F2)) / 2)
+```
+
+Let's have a look.
+
+```{r}
+can %>%
+  group_by(speaker, vowel) %>%
+  summarize(mean_f_disp = mean(f_disp, na.rm = TRUE)) %>%
+  ungroup() %>%
+  print(n = Inf)
+```
+
+## Jaw opening vs. F1
+
+There are two possible dependent variables to be tested: F1 and jaw opening.
+Let's see what is their correlation in our data:
+
+```{r}
+cor.test(can$lip_dist, can$F1)
+```
+
+Plotting the raw values...
+
+```{r}
+ggplot(can,
+       aes(x = lip_dist,
+           y = F1)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(size = 1, 
+              method = lm, 
+              se = F)
+```
+
+Very highly correlated, as expected. Let's see about the formant dispersion, as suggested by one of the reviewers.
+
+## Jaw opening vs. formant dispersion
+
+
+```{r}
+cor.test(can$lip_dist, can$f_disp)
+```
+
+Plotting the raw values...
+
+```{r}
+ggplot(can,
+       aes(x = lip_dist,
+           y = f_disp)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(size = 1, 
+              method = lm, 
+              se = F)
+```
+
+This is very interesting. There are some "whiskers" that are clearly not linear.
+
+Given this interesting observation, I think it is fair to test both outcome variables: jaw opening and formant dispersion.
+
+
+## Bayesian modeling
+
+Here, I'm computing a model that estimates the probability of an effect of can size (among others) on lip distance and on formant dispersion. The first iteration of this analysis was done with the help of Timo Roettger. Since then, however, the analysis has been upgraded with the comments of three anonymous reviewers and Bodo Winter.
+
+------------------------------------------------------------------------
+
+The variables are already contrast-coded.
+
+We don't know about the distribution of the lip distance and formant dispersion. This is important for choosing the appropriate family.
+
+```{r}
+# Histogram for lip_dist
+ggplot(can, aes(x = lip_dist)) +
+  geom_histogram(bins = 30, fill = "blue", color = "black") +
+  labs(title = "Distribution of lip_dist", x = "lip_dist", y = "Frequency") +
+  theme_minimal()
+# looks kind of normal
+
+# Histogram for f_disp
+ggplot(can, aes(x = f_disp)) +
+  geom_histogram(bins = 30, fill = "blue", color = "black") +
+  labs(title = "Distribution of f_disp", x = "f_disp", y = "Frequency") +
+  theme_minimal()
+# this is skewed, I would opt for lognormal
+
+# Descriptive Statistics
+summary(can$lip_dist)
+summary(can$f_disp)
+
+```
+
+While lip distance looks normally distributed, formant dispersion is definitely skewed. I am also a little suspicious of the "normality" in lip_disp. We will fit the priors accordingly to this.
+
+We will also turn to the maximal model in both cases instantly and only if the model will not perform well, we will seek an alternative.
+
+For each model, I will fit weakly informative priors.
+
+I divide in two streams: lip distance and formant dispersion.
+
+### Lip distance
+
+#### Priors
+
+Since this one will be lognormal, let's look what values we can expect.
+
+```{r}
+# In intercept is 1000
+log(4)
+
+# If we set the prior to normal(0,1), what would be the boundaries
+exp(log(4)-.5); exp(log(4)+.5)
+
+# If we set the prior to normal(0,2), what would be the boundaries
+exp(log(4)-1); exp(log(4)+1)
+
+# If we set the prior to normal(0,3), what would be the boundaries
+exp(log(4)-1.5); exp(log(4)+1.5)
+```
+
+
+```{r}
+get_prior(formula = lip_dist ~ 1 + vowel_s + can_size_s + head_pos + h_pos + v_pos + height + # head_pos and v_pos will be separated
+            (1 + vowel_s + can_size_s + head_pos + h_pos + v_pos || speaker),
+          data = can,
+          family = lognormal())
+```
+
+I will not specify any priors for the group-level effects.
+
+```{r}
+priors_maxH2_lip <- c(
+  prior('normal(0, 3)', class = 'Intercept'),
+  prior('normal(0, 1)', class = b)
+)
+```
+
+We have to fit both dependent variables with the two predictors head position and vertical position separately.
+
+#### Fit models
+
+##### Head position
+
+```{r}
+mdl_maxH2_lip_headPos <- brm(lip_dist ~ 
+                               1 + vowel_s + can_size_s + 
+                               head_pos + h_pos + height +
+                      (1 + vowel_s + can_size_s + 
+                         head_pos + h_pos || speaker),
+                   data = can,
+                   prior = priors_maxH2_lip,
+                   family = lognormal(),
+                   backend = "cmdstanr",
+                   cores = 4,
+                   chains = 4,
+                   iter = 8000,
+                   warmup = 4000,
+                   seed = 998,
+                   save_pars = save_pars(all = TRUE),
+                   control = list(max_treedepth = 13,
+                                  adapt_delta = 0.99),
+                   file = paste0(models, "mdl_maxH2_lip_headPos.rds"))
+
+# if we need to compress the model more
+#saveRDS(mdl_maxH2_lip_headPos, file = paste0(models, "mdl_maxH2_lip_headPos.rds"), compress = "xz")
+
+mdl_maxH2_lip_headPos <- readRDS(paste0(models, "mdl_maxH2_lip_headPos.rds"))
+
+beepr::beep()
+```
+
+Let's check how it looks like.
+
+```{r}
+summary(mdl_maxH2_lip_headPos)
+```
+
+```{r}
+plot(mdl_maxH2_lip_headPos)
+```
+
+```{r}
+conditional_effects(mdl_maxH2_lip_headPos, sample_prior = "only")
+```
+
+```{r}
+pp_check(mdl_maxH2_lip_headPos, ndraws = 100)
+```
+
+Let's compute the loo for model comparison.
+
+```{r}
+# run loo mdl
+if (file.exists(paste0(models, "mdl_maxH2_lip_headPos_loo.rds"))) {
+  mdl_maxH2_lip_headPos_loo <- readRDS(paste0(models, "mdl_maxH2_lip_headPos_loo.rds"))
+} else {
+  mdl_maxH2_lip_headPos_loo <- loo(mdl_maxH2_lip_headPos, moment_match = TRUE)
+  saveRDS(mdl_maxH2_lip_headPos_loo, paste0(models, "mdl_maxH2_lip_headPos_loo.rds"))
+}
+```
+
+Check the loo.
+
+```{r}
+mdl_maxH2_lip_headPos_loo
+```
+
+See if any [reloo](https://paul-buerkner.github.io/brms/reference/reloo.html) is needed.
+
+```{r}
+if (file.exists(paste0(models, "mdl_maxH2_lip_headPos_reloo.rds"))) {
+  mdl_maxH2_lip_headPos_reloo <- readRDS(paste0(models, "mdl_maxH2_lip_headPos_reloo.rds"))
+} else {
+  mdl_maxH2_lip_headPos_reloo <- reloo(mdl_maxH2_lip_headPos_loo, mdl_maxH2_lip_headPos, chains = 1)
+  saveRDS(mdl_maxH2_lip_headPos_reloo, paste0(models, "mdl_maxH2_lip_headPos_reloo.rds"))
+}
+
+mdl_maxH2_lip_headPos_reloo
+```
+
+
+##### Vertical position
+
+
+```{r}
+mdl_maxH2_lip_vPos <- brm(f0_mean ~ 1 + vowel_s + can_size_s + 
+                      h_pos + v_pos + height +
+                      (1 + vowel_s + can_size_s + 
+                         h_pos + v_pos || speaker),
+                   data = can,
+                   prior = priors_maxH2_lip,
+                   family = lognormal(),
+                   #backend = "cmdstanr",
+                   cores = 4,
+                   chains = 4,
+                   iter = 8000,
+                   warmup = 4000,
+                   seed = 998,
+                   save_pars = save_pars(all = TRUE),
+                   control = list(max_treedepth = 13,
+                                  adapt_delta = 0.99),
+                   file = paste0(models, "mdl_maxH2_lip_vPos.rds"))
+
+# if we need to compress the model more
+#saveRDS(mdl_maxH2_lip_vPos, file = paste0(models, "mdl_maxH2_lip_vPos.rds"), compress = "xz")
+
+mdl_maxH2_lip_vPos <- readRDS(paste0(models, "mdl_maxH2_lip_vPos.rds"))
+
+beepr::beep()
+```
+
+Let's check how it looks like.
+
+```{r}
+summary(mdl_maxH2_lip_vPos)
+```
+
+```{r}
+plot(mdl_maxH2_lip_vPos)
+```
+
+```{r}
+conditional_effects(mdl_maxH2_lip_vPos, sample_prior = "only")
+```
+
+```{r}
+pp_check(mdl_maxH2_lip_vPos, ndraws = 100)
+```
+
+Let's compute the loo for model comparison.
+
+```{r}
+# run loo mdl
+if (file.exists(paste0(models, "mdl_maxH2_lip_vPos_loo.rds"))) {
+  mdl_maxH2_lip_vPos_loo <- readRDS(paste0(models, "mdl_maxH2_lip_vPos_loo.rds"))
+} else {
+  mdl_maxH2_lip_vPos_loo <- loo(mdl_maxH2_lip_vPos, moment_match = TRUE)
+  saveRDS(mdl_maxH2_lip_vPos_loo, paste0(models, "mdl_maxH2_lip_vPos_loo.rds"))
+}
+```
+
+Check the loo.
+
+```{r}
+mdl_maxH2_lip_vPos_loo
+```
+
+See if any [reloo](https://paul-buerkner.github.io/brms/reference/reloo.html) is needed.
+
+```{r}
+if (file.exists(paste0(models, "mdl_maxH2_lip_vPos_reloo.rds"))) {
+  mdl_maxH2_lip_vPos_reloo <- readRDS(paste0(models, "mdl_maxH2_lip_vPos_reloo.rds"))
+} else {
+  mdl_maxH2_lip_vPos_reloo <- reloo(mdl_maxH2_lip_vPos_loo, mdl_maxH2_lip_vPos, chains = 1)
+  saveRDS(mdl_maxH2_lip_vPos_reloo, paste0(models, "mdl_maxH2_lip_vPos_reloo.rds"))
+}
+
+mdl_maxH2_lip_vPos_reloo
+```
+
+#### Analysis of the models
+
+##### Head position
+
+We would expect:
+
+- vowel_s to have a positive effect on lip_dist, because -0.5 is [i], and 0.5 is [a], and [a] should have a larger lip distance being an open vowel
+- head_pos -- no expectation
+- height -- no expectation
+- can_size_s to have a negative effect on lip_dist, because -0.5 is small, and 0.5 is large, and our hypothesis says that iconically smaller object would yield smaller aperture
+- h_pos -- no expectation
+
+First, let's look at the summary again.
+
+```{r}
+summary(mdl_maxH1_headPos)
+```
+
+Now let's check the hypotheses using brms function.
+
+```{r}
+hypothesis(mdl_maxH1_headPos, "vowel_s < 0")
+plot(hypothesis(mdl_maxH1_headPos, "vowel_s < 0"))
+```
+
+The assumption holds for vowel: [i] has a higher means *f*0.
+
+
+#### Plots
+
+
+##### Jaw opening (old)
+
+Let's see what's the relationship between size and jaw opening:
+
+```{r, warning=FALSE, message=FALSE}
+lip <- ggplot(can,
+              aes(y = lip_dist,
+                  x = vowel,
+                  fill = can_size)) +
+  geom_violin(position = position_dodge(1),
+              trim = FALSE,
+              alpha = 0.4) +
+  # adds median and quartile:
+  geom_boxplot(width = 0.1,
+               position = position_dodge((1)),
+               alpha = 0.6,
+               outlier.shape = NA, # Hides outliers.
+               notch = T, #  Notches are used to compare groups; if the notches of two boxes do not overlap, this suggests that the medians are significantly different.
+               coef = 0) + # Length of the whiskers as multiple of IQR. Defaults to 1.5. 
+  scale_fill_manual(values = colorBlindBlack8) +
+  labs(x = "Vowel",
+       y = "Lip opening",
+       fill = "Can size") + 
+  theme_bw()+
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 16),
+              legend.title = element_text(size = 14),
+              legend.text = element_text(size = 12))
+
+lip
+
+# ggsave(plot = lip, filename = "lip.pdf", width = 6, height = 4)
+```
+
+The lower and upper hinges correspond to the first and third quartiles (the 25th and 75th percentiles). There are no whiskers to make the plot more clear.
+
+The vowel does make a big difference, but the size has no effect.
+
+
+### Formant dispersion
+
+#### Priors
+
+Since this one will be lognormal, let's look what values we can expect.
+
+```{r}
+# In intercept is 1000
+log(1000)
+
+# If we set the prior to normal(0,5), what would be the boundaries
+exp(log(1000)-2.5); exp(log(1000)+2.5)
+
+# If we set the prior to normal(0,4), what would be the boundaries
+exp(log(1000)-2); exp(log(1000)+2)
+
+# If we set the prior to normal(0,3), what would be the boundaries
+exp(log(1000)-1.5); exp(log(1000)+1.5)
+```
+
+
+```{r}
+get_prior(formula = f_disp ~ 1 + vowel_s + can_size_s + head_pos + h_pos + v_pos + height + # head_pos and v_pos will be separated
+            (1 + vowel_s + can_size_s + head_pos + h_pos + v_pos || speaker),
+          data = can,
+          family = lognormal())
+```
+
+I will not specify any priors for the group-level effects.
+
+```{r}
+priors_maxH2_form <- c(
+  prior('normal(0, 4)', class = 'Intercept'),
+  prior('normal(0, 1)', class = b)
+)
+```
+
+We have to fit both dependent variables with the two predictors head position and vertical position separately.
+
+#### Fit models
+
+##### Head position
+
+```{r}
+mdl_maxH2_form_headPos <- brm(f_disp ~ 
+                               1 + vowel_s + can_size_s + 
+                               head_pos + h_pos + height +
+                      (1 + vowel_s + can_size_s + 
+                         head_pos + h_pos || speaker),
+                   data = can,
+                   prior = priors_maxH2_form,
+                   family = lognormal(),
+                   backend = "cmdstanr",
+                   cores = 4,
+                   chains = 4,
+                   iter = 8000,
+                   warmup = 4000,
+                   seed = 998,
+                   save_pars = save_pars(all = TRUE),
+                   control = list(max_treedepth = 13,
+                                  adapt_delta = 0.99),
+                   file = paste0(models, "mdl_maxH2_form_headPos.rds"))
+
+# if we need to compress the model more
+#saveRDS(mdl_maxH2_form_headPos, file = paste0(models, "mdl_maxH2_form_headPos.rds"), compress = "xz")
+
+mdl_maxH2_form_headPos <- readRDS(paste0(models, "mdl_maxH2_form_headPos.rds"))
+
+beepr::beep()
+```
+
+Let's check how it looks like.
+
+```{r}
+summary(mdl_maxH2_form_headPos)
+```
+
+```{r}
+plot(mdl_maxH2_form_headPos)
+```
+
+```{r}
+conditional_effects(mdl_maxH2_form_headPos, sample_prior = "only")
+```
+
+```{r}
+pp_check(mdl_maxH2_form_headPos, ndraws = 100)
+```
+
+Let's compute the loo for model comparison.
+
+```{r}
+# run loo mdl
+if (file.exists(paste0(models, "mdl_maxH2_form_headPos_loo.rds"))) {
+  mdl_maxH2_form_headPos_loo <- readRDS(paste0(models, "mdl_maxH2_form_headPos_loo.rds"))
+} else {
+  mdl_maxH2_form_headPos_loo <- loo(mdl_maxH2_form_headPos, moment_match = TRUE)
+  saveRDS(mdl_maxH2_form_headPos_loo, paste0(models, "mdl_maxH2_form_headPos_loo.rds"))
+}
+```
+
+Check the loo.
+
+```{r}
+mdl_maxH2_form_headPos_loo
+```
+
+See if any [reloo](https://paul-buerkner.github.io/brms/reference/reloo.html) is needed.
+
+```{r}
+if (file.exists(paste0(models, "mdl_maxH2_form_headPos_reloo.rds"))) {
+  mdl_maxH2_form_headPos_reloo <- readRDS(paste0(models, "mdl_maxH2_form_headPos_reloo.rds"))
+} else {
+  mdl_maxH2_form_headPos_reloo <- reloo(mdl_maxH2_form_headPos_loo, mdl_maxH2_form_headPos, chains = 1)
+  saveRDS(mdl_maxH2_form_headPos_reloo, paste0(models, "mdl_maxH2_form_headPos_reloo.rds"))
+}
+
+mdl_maxH2_form_headPos_reloo
+```
+
+
+##### Vertical position
+
+
+```{r}
+mdl_maxH2_form_vPos <- brm(f0_mean ~ 1 + vowel_s + can_size_s + 
+                      h_pos + v_pos + height +
+                      (1 + vowel_s + can_size_s + 
+                         h_pos + v_pos || speaker),
+                   data = can,
+                   prior = priors_maxH2_form,
+                   family = lognormal(),
+                   #backend = "cmdstanr",
+                   cores = 4,
+                   chains = 4,
+                   iter = 8000,
+                   warmup = 4000,
+                   seed = 998,
+                   save_pars = save_pars(all = TRUE),
+                   control = list(max_treedepth = 13,
+                                  adapt_delta = 0.99),
+                   file = paste0(models, "mdl_maxH2_form_vPos.rds"))
+
+# if we need to compress the model more
+#saveRDS(mdl_maxH2_form_vPos, file = paste0(models, "mdl_maxH2_form_vPos.rds"), compress = "xz")
+
+mdl_maxH2_form_vPos <- readRDS(paste0(models, "mdl_maxH2_form_vPos.rds"))
+
+beepr::beep()
+```
+
+Let's check how it looks like.
+
+```{r}
+summary(mdl_maxH2_form_vPos)
+```
+
+```{r}
+plot(mdl_maxH2_form_vPos)
+```
+
+```{r}
+conditional_effects(mdl_maxH2_form_vPos, sample_prior = "only")
+```
+
+```{r}
+pp_check(mdl_maxH2_form_vPos, ndraws = 100)
+```
+
+Let's compute the loo for model comparison.
+
+```{r}
+# run loo mdl
+if (file.exists(paste0(models, "mdl_maxH2_form_vPos_loo.rds"))) {
+  mdl_maxH2_form_vPos_loo <- readRDS(paste0(models, "mdl_maxH2_form_vPos_loo.rds"))
+} else {
+  mdl_maxH2_form_vPos_loo <- loo(mdl_maxH2_form_vPos, moment_match = TRUE)
+  saveRDS(mdl_maxH2_form_vPos_loo, paste0(models, "mdl_maxH2_form_vPos_loo.rds"))
+}
+```
+
+Check the loo.
+
+```{r}
+mdl_maxH2_form_vPos_loo
+```
+
+See if any [reloo](https://paul-buerkner.github.io/brms/reference/reloo.html) is needed.
+
+```{r}
+if (file.exists(paste0(models, "mdl_maxH2_form_vPos_reloo.rds"))) {
+  mdl_maxH2_form_vPos_reloo <- readRDS(paste0(models, "mdl_maxH2_form_vPos_reloo.rds"))
+} else {
+  mdl_maxH2_form_vPos_reloo <- reloo(mdl_maxH2_form_vPos_loo, mdl_maxH2_form_vPos, chains = 1)
+  saveRDS(mdl_maxH2_form_vPos_reloo, paste0(models, "mdl_maxH2_form_vPos_reloo.rds"))
+}
+
+mdl_maxH2_form_vPos_reloo
+```
+
+#### Analysis of the models
+
+
+#### Plots
+
+##### Formants (old but modified)
+
+Scatter plot of F1 and F2:
+
+```{r, warning=FALSE, message=FALSE}
+scatter_formant_v <- ggplot(can,
+                              aes(y = F2,
+                                  x = F1,
+                                  color = vowel)) +
+  geom_point(alpha = 0.2) +
+  stat_ellipse(segments = 51, 
+               size = 1)  +
+  scale_color_manual(values = colorBlindBlack8) +
+  labs(x = "F1",
+       y = "F2",
+       color = "Vowel")
+
+print(scatter_formant_v +
+        facet_wrap(~can_size) +
+        theme_bw() +
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 16),
+              legend.title = element_text(size = 14),
+              legend.text = element_text(size = 12)))
+```
+
+The difference between the vowels is clearly visible, according to articulatory phonetics.
+
+What happens if we switch plot the vowels on separate plots and sizes on the same? The t-test suggests there will be no difference, but let's have a look.
+
+```{r, warning=FALSE, message=FALSE}
+scatter_formant_size <- ggplot(can,
+                              aes(y = F2,
+                                  x = F1,
+                                  color = can_size)) +
+        facet_wrap(~vowel) +
+  geom_point(alpha = 0.2) +
+  stat_ellipse(segments = 51, 
+               size = 1)  +
+  scale_color_manual(values = colorBlindBlack8) +
+  labs(y = "F2",
+       x = "F1",
+       color = "Can size") +
+  theme_bw() +
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 16),
+              legend.title = element_text(size = 14),
+              legend.text = element_text(size = 12))
+
+scatter_formant_size
+
+# ggsave(plot = scatter_z_formant, filename = "size_vowel.pdf", width = 7, height = 4)
+```
+
+Exactly as already predicted by the t-test, there is no difference of vowels space between large and small cans.
+
+I will show it again using the phonR package:
+
+```{r}
+vowel_space <- with(can, plotVowels(F1, F2, vowel,
+                                  group = can_size,
+                                  plot.tokens = FALSE,
+                                  plot.means = TRUE,
+                                  pch.means = vowel,
+                                  cex.means = 2,
+                                  var.col.by = can_size,
+                                  var.sty.by = can_size,
+                                  ellipse.fill = T,
+                                  poly.line = T,
+                                  pretty = T,
+                                  col = colorBlindBlack8,
+                                  legend.kwd = "bottomleft",
+                                  cex.lab = 1.2,
+                                  cex.axis = 1
+                                  #main = "Z"
+                                  ))
+
+#ggsave(plot = vowel_space_Z, filename = "size-vowel-phonR.pdf", width = 7, height = 4)
+
+```
+
+Just for comparison, let's have a look at bark scale instead of Z normalized values:
+
+```{r}
+vowel_space_bark <- with(can, plotVowels(F1_bark, F2_bark, vowel,
+                                  group = can_size,
+                                  plot.tokens = FALSE,
+                                  plot.means = TRUE,
+                                  pch.means = vowel,
+                                  cex.means = 1.5,
+                                  var.col.by = can_size,
+                                  var.sty.by = can_size,
+                                  #ylim = c(10,3),
+                                  #xlim = c(15,8),
+                                  ellipse.fill = T,
+                                  poly.line = T,
+                                  pretty = T,
+                                  legend.kwd = "bottomleft",
+                                  main = "Bark"))
+```
+
+Just for the sake of it, we can also look how it looks in vertical position 1, where the effect looked most robust:
+
+```{r}
+# First, filter the data:
+formant_v1 <- filter(can, v_pos == '1')
+
+# And then plot it:
+size_vowel_v1 <- ggplot(formant_v1,
+       aes(y = F1,
+           x = F2,
+           color = can_size)) +
+  geom_point(alpha = 0.2) +
+  stat_ellipse(segments = 51,
+               size = 1) + 
+  scale_color_manual(values=colorBlindBlack8) +
+  labs(x = "F1",
+       y = "F2",
+       color = "Can size") +
+  facet_wrap(~vowel) +
+  theme_bw() +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 16),
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12))
+
+size_vowel_v1
+
+# ggsave(plot = size_vowel_v1, filename = "size_vowel_v1.pdf", width = 7, height = 4)
+
+```
+
+The difference is more visible, but still it is barely there.
+
+##### New plots
+
+```{r, warning=FALSE, message=FALSE}
+p_fDisp_vowel_size <- ggplot(can,
+              aes(y = f_disp,
+                  x = vowel,
+                  fill = can_size)) +
+  geom_violin(position = position_dodge(1),
+              trim = FALSE,
+              alpha = 0.4) +
+  # adds median and quartile:
+  geom_boxplot(width = 0.1,
+               position = position_dodge((1)),
+               alpha = 0.6,
+               outlier.shape = NA, # Hides outliers.
+               notch = T, #  Notches are used to compare groups; if the notches of two boxes do not overlap, this suggests that the medians are significantly different.
+               coef = 0) + # Length of the whiskers as multiple of IQR. Defaults to 1.5. 
+  scale_fill_manual(values = colorBlindBlack8) +
+  labs(x = "Vowel",
+       y = "Formant dispersion",
+       fill = "Can size") + 
+  theme_bw()+
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 16),
+              legend.title = element_text(size = 14),
+              legend.text = element_text(size = 12))
+
+p_fDisp_vowel_size
+
+# ggsave(plot = lip, filename = "lip.pdf", width = 6, height = 4)
+```
+
+The vowel makes a big difference, but the formant dispersion doesn't seem to make any.
