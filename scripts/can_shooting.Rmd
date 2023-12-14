@@ -1383,7 +1383,7 @@ p_hPos_mover <- mdl_maxH1_headPos %>%
 
 p_hPos_mover
 
-#ggsave(file = paste0(plots, "p_hPos_mover.svg"), plot = p_hPos_mover, width = 10, height = 8)
+ggsave(file = paste0(plots, "p_hPos_mover.pdf"), plot = p_hPos_mover, width = 10, height = 8)
 
 # this is very memory-consuming, so run this to kind of "reset"
 gc()
