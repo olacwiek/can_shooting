@@ -50,7 +50,7 @@ library(brms)
 options(mc.cores = parallel::detectCores())
 library(HDInterval) # package for credible interval computation
 library(tidybayes) # plotting
-library(brmstools) # forest plot
+# library(brmstools) # forest plot but the package is no longer maintained
 library(phonR) # for formant plots
 
 # Use a colorblind-friendly palette
@@ -1353,11 +1353,14 @@ can %>%
 Given the various head movement behavior, we can also expect big inter-speaker variance.
 
 ```{r}
-brmstools::forest(mdl_maxH1_headPos, 
-                  grouping = "speaker", 
-                  pars = "head_pos", 
-                  digits = 0,
-                  sort = T)
+# brmstools::forest(mdl_maxH1_headPos, 
+#                   grouping = "speaker", 
+#                   pars = "head_pos", 
+#                   digits = 0,
+#                   sort = T)
+
+# See new way:
+# https://github.com/mvuorre/brmstools?tab=readme-ov-file#forest-plots
 ```
 
 The effect is present across all speakers. It would be nice to see how this relates to being mover or non-mover.
@@ -1380,7 +1383,7 @@ p_hPos_mover <- mdl_maxH1_headPos %>%
 
 p_hPos_mover
 
-ggsave(file = paste0(plots, "p_hPos_mover.svg"), plot = p_hPos_mover, width = 10, height = 8)
+#ggsave(file = paste0(plots, "p_hPos_mover.svg"), plot = p_hPos_mover, width = 10, height = 8)
 
 # this is very memory-consuming, so run this to kind of "reset"
 gc()
@@ -1840,7 +1843,7 @@ mdl_maxH2_lip_headPos <- brm(lip_dist ~
                    data = can,
                    prior = priors_maxH2_lip,
                    family = lognormal(),
-                   backend = "cmdstanr",
+                   #backend = "cmdstanr",
                    cores = 4,
                    chains = 4,
                    iter = 8000,
@@ -1913,7 +1916,7 @@ mdl_maxH2_lip_headPos_reloo
 
 
 ```{r}
-mdl_maxH2_lip_vPos <- brm(f0_mean ~ 1 + vowel_s + can_size_s + 
+mdl_maxH2_lip_vPos <- brm(lip_dist ~ 1 + vowel_s + can_size_s + 
                       h_pos + v_pos + height +
                       (1 + vowel_s + can_size_s + 
                          h_pos + v_pos || speaker),
@@ -1973,19 +1976,6 @@ Check the loo.
 
 ```{r}
 mdl_maxH2_lip_vPos_loo
-```
-
-See if any [reloo](https://paul-buerkner.github.io/brms/reference/reloo.html) is needed.
-
-```{r}
-if (file.exists(paste0(models, "mdl_maxH2_lip_vPos_reloo.rds"))) {
-  mdl_maxH2_lip_vPos_reloo <- readRDS(paste0(models, "mdl_maxH2_lip_vPos_reloo.rds"))
-} else {
-  mdl_maxH2_lip_vPos_reloo <- reloo(mdl_maxH2_lip_vPos_loo, mdl_maxH2_lip_vPos, chains = 1)
-  saveRDS(mdl_maxH2_lip_vPos_reloo, paste0(models, "mdl_maxH2_lip_vPos_reloo.rds"))
-}
-
-mdl_maxH2_lip_vPos_reloo
 ```
 
 #### Analysis of the models
@@ -2110,7 +2100,7 @@ mdl_maxH2_form_headPos <- brm(f_disp ~
                    data = can,
                    prior = priors_maxH2_form,
                    family = lognormal(),
-                   backend = "cmdstanr",
+                   #backend = "cmdstanr",
                    cores = 4,
                    chains = 4,
                    iter = 8000,
@@ -2183,7 +2173,7 @@ mdl_maxH2_form_headPos_reloo
 
 
 ```{r}
-mdl_maxH2_form_vPos <- brm(f0_mean ~ 1 + vowel_s + can_size_s + 
+mdl_maxH2_form_vPos <- brm(f_disp ~ 1 + vowel_s + can_size_s + 
                       h_pos + v_pos + height +
                       (1 + vowel_s + can_size_s + 
                          h_pos + v_pos || speaker),
