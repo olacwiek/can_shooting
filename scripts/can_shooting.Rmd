@@ -510,7 +510,7 @@ can_noNA <- mutate(can_noNA,
               F3_bark = normBark(F3))
 ```
 
-Replace back the placeholder value with NAs for formants in herzt and also replace the respective cells of formants transofrmed to bark to NA.
+Replace back the placeholder value with NAs for formants in herz and also replace the respective cells of formants transofrmed to bark to NA.
 
 ```{r}
 can_noNA <- mutate(can_noNA,
@@ -1382,9 +1382,14 @@ p_hPos_mover <- mdl_maxH1_headPos %>%
     labs(x = "Posterior distribution (Head position)", y = "Speaker", fill = "Mover") +
     theme_minimal()
 
-p_hPos_mover
+print(p_hPos_mover +
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 14,
+                                        face = "bold"),
+              legend.title = element_text(size = 14),
+              legend.text = element_text(size = 12)))
 
-ggsave(file = paste0(plots, "p_hPos_mover.pdf"), plot = p_hPos_mover, width = 10, height = 8)
+# ggsave(file = paste0(plots, "p_hPos_mover.pdf"), plot = last_plot(), width = 8, height = 10)
 
 # this is very memory-consuming, so run this to kind of "reset"
 gc()
@@ -1406,116 +1411,236 @@ Having raw and posterior values, we can show the effects visually.
 
 Scatter plot with regression lines: *f*0 mean x head position
 
-Z-normalized
+#### Vowel
+
+By vowel, z-normalized:
 
 ```{r}
-ggplot(can, aes(x = head_pos_z, y = f0_mean_z, color = factor(vowel))) +
-    geom_point(alpha = 0.5) +
-    stat_smooth(method = "lm", se = TRUE) +
+f0_head_pos_vow_z <- ggplot(can, 
+                          aes(x = head_pos_z, 
+                              y = f0_mean_z, 
+                              color = factor(vowel))) +
+    geom_point(alpha = 0.4) +
+    stat_smooth(size = 1,
+                method = "lm", 
+                se = TRUE) +
     labs(color = "Vowel", x = "Head Position (z-normalized)", y = "f0 Mean (z-normalized)") +
     theme_minimal() +
     scale_color_manual(values = colorBlindBlack8)
-```
 
-Raw values
-
-```{r}
-ggplot(can, aes(x = head_pos, y = f0_mean, color = factor(vowel))) +
-    geom_point(alpha = 0.5) +
-    stat_smooth(method = "lm", se = TRUE) +
-    labs(color = "Vowel", x = "Head Position (cm)", y = "f0 Mean (Hz)") +
-    theme_minimal() +
-    scale_color_manual(values = colorBlindBlack8)
-```
-
-There is a lot of individual differences between the speakers. E.g. 25 shows barely an effect for vowel and an opposite effect for size, especially striking in a; similarly 12 shows no effect for size and only a small for vowel; speakers 22 and 27 have a similar pattern of their behavior, in line also with 14 and 19.
-
-Let's see how the movers behave:
-
-```{r, warning=FALSE, message=FALSE}
-print(f0_vowel + 
-        facet_wrap(~mover) + 
-        theme_minimal())
-```
-
-
-
-```{r, warning=FALSE, message=FALSE}
-f0_head_pos <- ggplot(can,
-                   aes(x = head_pos_z,
-                       y = f0_mean_z,
-                       color = can_size)) +
-  geom_point(alpha = 0.2) +
-  geom_smooth(size = 1, 
-              method = lm, 
-              se = F) +
-  scale_color_manual(values=colorBlindBlack8) +
-  labs(x = "Head position (z-normalized)",
-       y = "F0 (z-normalized)",
-       color = "Can size")
-
-print(f0_head_pos + theme_bw() +
+print(f0_head_pos_vow_z + theme_bw() +
         theme(axis.text = element_text(size = 12),
               axis.title = element_text(size = 14,
                                         face = "bold"),
               legend.title = element_text(size = 14),
               legend.text = element_text(size = 12)))
 
-# ggsave(filename = "F0-head.pdf",
-#        plot = last_plot(),
-#        width = 7, height = 4)
+ggsave(filename = paste0(plots, "f0_head_pos_vow_z.pdf"),
+       plot = last_plot(),
+       width = 8, height = 5)
+
 ```
 
-#### Mover
+By vowels, raw values:
 
 ```{r}
-f0_head_mover <- ggplot(can,
-       aes(x = head_pos_z,
-           y = f0_mean_z)) +
-    geom_point(alpha = 0.1) +
-    geom_smooth(method = lm,
-                size = 1,
-                se = F,
-                color = 'black') +
-    #color = "#00BFC4") +
-    facet_wrap(~mover, labeller = label_both) + 
-    labs(x = "Head position (z-normalized)",
-         y = "f0 mean (z-Normalized)")
+f0_head_pos_vow_raw <- ggplot(can, 
+                          aes(x = head_pos, 
+                              y = f0_mean, 
+                              color = factor(vowel))) +
+    geom_point(alpha = 0.4) +
+    stat_smooth(size = 1,
+                method = "lm", 
+                se = TRUE) +
+    labs(color = "Vowel", x = "Head Position (cm)", y = "f0 Mean (Hz)") +
+    theme_minimal() +
+    scale_color_manual(values = colorBlindBlack8)
 
-print(f0_head_mover + theme_bw() +
-        theme(strip.text.x = element_text(size = 12),
-              #strip.background = element_rect(fill = "#F8766D"),
-              axis.text = element_text(size = 12),
+print(f0_head_pos_vow_raw + theme_bw() +
+        theme(axis.text = element_text(size = 12),
               axis.title = element_text(size = 14,
                                         face = "bold"),
               legend.title = element_text(size = 14),
               legend.text = element_text(size = 12)))
 
-# ggsave(filename = "F0-head-mover.pdf",
-#         plot = last_plot(),
-#         width = 7, height = 4)
+ggsave(filename = paste0(plots, "f0_head_pos_vow_raw.pdf"),
+       plot = last_plot(),
+       width = 8, height = 5)
+
+```
+
+#### Size
+
+By size, z:
+
+```{r, warning=FALSE, message=FALSE}
+f0_head_pos_size_z <- ggplot(can,
+                   aes(x = head_pos_z,
+                       y = f0_mean_z,
+                       color = can_size)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(size = 1, 
+              method = lm, 
+              se = T) +
+  scale_color_manual(values=colorBlindBlack8) +
+  labs(x = "Head position (z-normalized)",
+       y = "f0 mean (z-normalized)",
+       color = "Can size")
+
+print(f0_head_pos_size_z + theme_bw() +
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 14,
+                                        face = "bold"),
+              legend.title = element_text(size = 14),
+              legend.text = element_text(size = 12)))
+
+# ggsave(filename = paste0(plots, "f0_head_pos_size_z.pdf"),
+#        plot = last_plot(),
+#        width = 8, height = 5)
+```
+
+By size, raw:
+
+```{r, warning=FALSE, message=FALSE}
+f0_head_pos_size_raw <- ggplot(can,
+                   aes(x = head_pos,
+                       y = f0_mean,
+                       color = can_size)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(size = 1, 
+              method = lm, 
+              se = T) +
+  scale_color_manual(values=colorBlindBlack8) +
+  labs(x = "Head position (cm)",
+       y = "f0 mean (Hz)",
+       color = "Can size")
+
+print(f0_head_pos_size_raw + theme_bw() +
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 14,
+                                        face = "bold"),
+              legend.title = element_text(size = 14),
+              legend.text = element_text(size = 12)))
+
+# ggsave(filename = paste0(plots, "f0_head_pos_size_raw.pdf"),
+#        plot = last_plot(),
+#        width = 8, height = 5)
+```
+
+
+#### Mover
+
+By mover, z:
+
+```{r, warning=FALSE, message=FALSE}
+f0_head_pos_mover_z <- ggplot(can,
+                   aes(x = head_pos_z,
+                       y = f0_mean_z,
+                       color = mover)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(size = 1, 
+              method = lm, 
+              se = T) +
+  scale_color_manual(values=colorBlindBlack8) +
+  labs(x = "Head position (z-normalized)",
+       y = "f0 mean (z-normalized)",
+       color = "Mover")
+
+print(f0_head_pos_mover_z + theme_bw() +
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 14,
+                                        face = "bold"),
+              legend.title = element_text(size = 14),
+              legend.text = element_text(size = 12)))
+
+# ggsave(filename = paste0(plots, "f0_head_pos_mover_z.pdf"),
+#        plot = last_plot(),
+#        width = 8, height = 5)
+```
+
+By mover, raw:
+
+```{r, warning=FALSE, message=FALSE}
+f0_head_pos_mover_raw <- ggplot(can,
+                   aes(x = head_pos,
+                       y = f0_mean,
+                       color = mover)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(size = 1, 
+              method = lm, 
+              se = T) +
+  scale_color_manual(values=colorBlindBlack8) +
+  labs(x = "Head position (cm)",
+       y = "f0 mean (Hz)",
+       color = "Mover")
+
+print(f0_head_pos_mover_raw + theme_bw() +
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 14,
+                                        face = "bold"),
+              legend.title = element_text(size = 14),
+              legend.text = element_text(size = 12)))
+
+# ggsave(filename = paste0(plots, "f0_head_pos_mover_raw.pdf"),
+#        plot = last_plot(),
+#        width = 8, height = 5)
 ```
 
 #### F0 mean and vowel
 
+Z-normalized:
+
 ```{r}
-f0_vowel <- ggplot(can,
+f0_vowel_size_z <- ggplot(can,
+       aes(y = f0_mean_z,
+           x = vowel,
+           color = can_size)) +
+    stat_summary(position = position_dodge(width = 0.5),
+                 size = 0.75) +
+    scale_color_manual(values = colorBlindBlack8)+
+    labs(x = "Vowel",
+         y = "f0 mean (z-normalized)",
+         color = "Can size")
+
+print(f0_vowel_size_z + 
+        theme_bw()+
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 14,
+                                        face = "bold"),
+              legend.title = element_text(size = 14),
+              legend.text = element_text(size = 12)))
+
+# ggsave(filename = paste0(plots, "f0_vowel_size_z.pdf"),
+#        plot = last_plot(),
+#        width = 8, height = 5)
+
+```
+
+Raw values:
+
+```{r}
+f0_vowel_size_raw <- ggplot(can,
        aes(y = f0_mean,
            x = vowel,
            color = can_size)) +
     stat_summary(position = position_dodge(width = 0.5),
                  size = 0.75) +
-    scale_color_manual(values=colorBlindBlack8)+
+    scale_color_manual(values = colorBlindBlack8)+
     labs(x = "Vowel",
-         y = "F0 (z-normalized)",
+         y = "f0 mean (Hz)",
          color = "Can size")
 
-print(f0_vowel + 
-        theme_bw()+
+print(f0_vowel_size_raw + 
+        theme_bw() +
         theme(axis.text = element_text(size = 12),
-              axis.title = element_text(size = 16),
+              axis.title = element_text(size = 14,
+                                        face = "bold"),
               legend.title = element_text(size = 14),
               legend.text = element_text(size = 12)))
+
+# ggsave(filename = paste0(plots, "f0_vowel_size_raw.pdf"),
+#        plot = last_plot(),
+#        width = 8, height = 5)
 
 ```
 
@@ -1524,9 +1649,18 @@ The intrisic F0 difference between a and I is clearly visible with a having much
 Now let's see how this relationship looks like in all possible vertical and horizontal positions. I'm creating a 5x5 grid
 
 ```{r, warning=FALSE, message=FALSE}
-print(f0_vowel + 
+print(f0_vowel_size_raw + 
         facet_grid(v_pos~h_pos) + 
-        theme_minimal())
+        theme_bw() +
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 14,
+                                        face = "bold"),
+              legend.title = element_text(size = 14),
+              legend.text = element_text(size = 12)))
+
+# ggsave(filename = paste0(plots, "f0_vowel_size_raw_grid.pdf"),
+#        plot = last_plot(),
+#        width = 10, height = 8)
 ```
 
 
@@ -1535,11 +1669,39 @@ The a is always lower than the I, but we can see that here the relationship betw
 Let's have a look how the different speakers are behaving.
 
 ```{r, warning=FALSE, message=FALSE}
-print(f0_vowel + 
+print(f0_vowel_size_raw + 
         facet_wrap(~speaker) + 
-        theme_minimal())
+        theme_bw() +
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 14,
+                                        face = "bold"),
+              legend.title = element_text(size = 14),
+              legend.text = element_text(size = 12)))
+
+# ggsave(filename = paste0(plots, "f0_vowel_size_raw_speaker.pdf"),
+#        plot = last_plot(),
+#        width = 10, height = 8)
 ```
 
+
+There is a lot of individual differences between the speakers. E.g. 25 shows barely an effect for vowel and an opposite effect for size, especially striking in a; similarly 12 shows no effect for size and only a small for vowel; speakers 22 and 27 have a similar pattern of their behavior, in line also with 14 and 19.
+
+Let's see how the movers behave:
+
+```{r, warning=FALSE, message=FALSE}
+print(f0_vowel_size_raw + 
+        facet_wrap(~mover) + 
+        theme_bw() +
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 14,
+                                        face = "bold"),
+              legend.title = element_text(size = 14),
+              legend.text = element_text(size = 12)))
+
+# ggsave(filename = paste0(plots, "f0_vowel_size_raw_mover.pdf"),
+#        plot = last_plot(),
+#        width = 8, height = 5)
+```
 
 #### Posterior distribution
 
@@ -1557,13 +1719,18 @@ postplot_maxH1_headPos <-
                linetype = "dashed", color = "grey", size = 1) + 
   theme_bw() +
   labs(x = "Posterior density", y = "Variable") +
-  scale_y_discrete(labels = c("Can size", "Head position", "Height", "Horizontal pos.", "Vowel")) + # Must be in alphabetical order
+  scale_y_discrete(labels = c("Can size", "Horizontal pos.", "Head position", "Height", "Vowel")) + # Must be in alphabetical order
   scale_x_continuous(limits = c(-0.12, 0.02))
 
-postplot_maxH1_headPos
+print(postplot_maxH1_headPos +
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 14,
+                                        face = "bold")))
+
+# ggsave(filename = paste0(plots, "postplot_maxH1_headPos.pdf"),
+#        plot = last_plot(),
+#        width = 10, height = 8)
 ```
-
-
 
 
 ### Vertical position
@@ -1595,20 +1762,196 @@ f0_vertical <- ggplot(can,
                size = 1 ) + 
   scale_color_manual(values=colorBlindBlack8) +
   labs(x = "Vertical Position",
-       y = "F0 (z-normalized)",
+       y = "f0 mean (z-normalized)",
        color = "Can size") + 
   theme_bw()+
         theme(axis.text = element_text(size = 12),
-              axis.title = element_text(size = 16, 
+              axis.title = element_text(size = 14, 
                                   face="bold"),
               legend.title = element_text(size = 14),
               legend.text = element_text(size = 12))
 
 f0_vertical
 
-# ggsave(plot = f0_vertical, filename = "F0-vertical.pdf", width = 7, height = 4)
+ggsave(plot = f0_vertical, 
+       filename = paste0(plots, "f0-vertical.pdf"), 
+       width = 8, height = 5)
 ```
 
+#### Vowel
+
+By vowel, z-normalized:
+
+```{r}
+f0_vPos_vow_z <- ggplot(can, 
+                          aes(x = v_pos, 
+                              y = f0_mean_z, 
+                              color = factor(vowel))) +
+    geom_point(alpha = 0.4) +
+    stat_smooth(size = 1,
+                method = "lm", 
+                se = TRUE) +
+    labs(color = "Vowel", x = "Vertical Position", y = "f0 Mean (z-normalized)") +
+    theme_minimal() +
+    scale_color_manual(values = colorBlindBlack8)
+
+print(f0_vPos_vow_z + theme_bw() +
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 14,
+                                        face = "bold"),
+              legend.title = element_text(size = 14),
+              legend.text = element_text(size = 12)))
+
+# ggsave(filename = paste0(plots, "f0_vPos_vow_z.pdf"),
+#        plot = last_plot(),
+#        width = 8, height = 5)
+
+```
+
+By vowels, raw values:
+
+```{r}
+f0_vPos_vow_raw <- ggplot(can, 
+                          aes(x = v_pos, 
+                              y = f0_mean, 
+                              color = factor(vowel))) +
+    geom_point(alpha = 0.4) +
+    stat_smooth(size = 1,
+                method = "lm", 
+                se = TRUE) +
+    labs(color = "Vowel", x = "Vertical Position", y = "f0 Mean (Hz)") +
+    theme_minimal() +
+    scale_color_manual(values = colorBlindBlack8)
+
+print(f0_vPos_vow_raw + theme_bw() +
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 14,
+                                        face = "bold"),
+              legend.title = element_text(size = 14),
+              legend.text = element_text(size = 12)))
+
+# ggsave(filename = paste0(plots, "f0_vPos_vow_raw.pdf"),
+#        plot = last_plot(),
+#        width = 8, height = 5)
+
+```
+
+#### Size
+
+By size, z:
+
+```{r, warning=FALSE, message=FALSE}
+f0_vPos_size_z <- ggplot(can,
+                   aes(x = v_pos,
+                       y = f0_mean_z,
+                       color = can_size)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(size = 1, 
+              method = lm, 
+              se = T) +
+  scale_color_manual(values=colorBlindBlack8) +
+  labs(x = "Vertical Position",
+       y = "f0 Mean (z-normalized)",
+       color = "Can Size")
+
+print(f0_vPos_size_z + theme_bw() +
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 14,
+                                        face = "bold"),
+              legend.title = element_text(size = 14),
+              legend.text = element_text(size = 12)))
+
+# ggsave(filename = paste0(plots, "f0_vPos_size_z.pdf"),
+#        plot = last_plot(),
+#        width = 8, height = 5)
+```
+
+By size, raw:
+
+```{r, warning=FALSE, message=FALSE}
+f0_vPos_size_raw <- ggplot(can,
+                   aes(x = v_pos,
+                       y = f0_mean,
+                       color = can_size)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(size = 1, 
+              method = lm, 
+              se = T) +
+  scale_color_manual(values=colorBlindBlack8) +
+  labs(x = "Vertical Position",
+       y = "f0 Mean (Hz)",
+       color = "Can Size")
+
+print(f0_vPos_size_raw + theme_bw() +
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 14,
+                                        face = "bold"),
+              legend.title = element_text(size = 14),
+              legend.text = element_text(size = 12)))
+
+# ggsave(filename = paste0(plots, "f0_vPos_size_raw.pdf"),
+#        plot = last_plot(),
+#        width = 8, height = 5)
+```
+
+
+#### Mover
+
+By mover, z:
+
+```{r, warning=FALSE, message=FALSE}
+f0_vPos_size_raw <- ggplot(can,
+                   aes(x = v_pos,
+                       y = f0_mean_z,
+                       color = mover)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(size = 1, 
+              method = lm, 
+              se = T) +
+  scale_color_manual(values=colorBlindBlack8) +
+  labs(x = "Vertical Position",
+       y = "f0 Mean (z-normalized)",
+       color = "Mover")
+
+print(f0_vPos_size_raw + theme_bw() +
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 14,
+                                        face = "bold"),
+              legend.title = element_text(size = 14),
+              legend.text = element_text(size = 12)))
+
+# ggsave(filename = paste0(plots, "f0_vPos_size_raw.pdf"),
+#        plot = last_plot(),
+#        width = 8, height = 5)
+```
+
+By mover, raw:
+
+```{r, warning=FALSE, message=FALSE}
+f0_vPos_mover_raw <- ggplot(can,
+                   aes(x = v_pos,
+                       y = f0_mean,
+                       color = mover)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(size = 1, 
+              method = lm, 
+              se = T) +
+  scale_color_manual(values=colorBlindBlack8) +
+  labs(x = "Vertical Position",
+       y = "f0 Mean (Hz)",
+       color = "Mover")
+
+print(f0_vPos_mover_raw + theme_bw() +
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 14,
+                                        face = "bold"),
+              legend.title = element_text(size = 14),
+              legend.text = element_text(size = 12)))
+
+# ggsave(filename = paste0(plots, "f0_vPos_mover_raw.pdf"),
+#        plot = last_plot(),
+#        width = 8, height = 5)
+```
 
 #### Posterior distribution
 
@@ -1626,10 +1969,17 @@ postplot_maxH1_vPos <-
                linetype = "dashed", color = "grey", size = 1) + 
   theme_bw() +
   labs(x = "Posterior density", y = "Variable") +
-  scale_y_discrete(labels = c("Can size", "Height", "Horizontal pos.", "Vertical pos.", "Vowel")) + # Must be in alphabetical order
+  scale_y_discrete(labels = c("Can size", "Horizontal pos.", "Height", "Vertical pos.", "Vowel")) + # Must be in alphabetical order
   scale_x_continuous(limits = c(-0.13, 0.01))
 
-postplot_maxH1_vPos
+print(postplot_maxH1_vPos +
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 14,
+                                        face = "bold")))
+
+# ggsave(filename = paste0(plots, "postplot_maxH1_vPos.pdf"),
+#        plot = last_plot(),
+#        width = 10, height = 8)
 ```
 
 
@@ -2230,7 +2580,7 @@ exp(fixef(mdl_maxH2_lip_vPos)[1,1]) # intercept in cm
 Let's see what's the relationship between size and jaw opening:
 
 ```{r, warning=FALSE, message=FALSE}
-lip <- ggplot(can,
+lip_vowel_size <- ggplot(can,
               aes(y = lip_dist,
                   x = vowel,
                   fill = can_size)) +
@@ -2250,13 +2600,15 @@ lip <- ggplot(can,
        fill = "Can size") + 
   theme_bw()+
         theme(axis.text = element_text(size = 12),
-              axis.title = element_text(size = 16),
+              axis.title = element_text(size = 14, face = "bold"),
               legend.title = element_text(size = 14),
               legend.text = element_text(size = 12))
 
-lip
+lip_vowel_size
 
-# ggsave(plot = lip, filename = "lip.pdf", width = 6, height = 4)
+# ggsave(plot = lip, 
+#        filename = paste0(plots, "lip_vowel_size.pdf"), 
+#        width = 8, height = 5)
 ```
 
 The lower and upper hinges correspond to the first and third quartiles (the 25th and 75th percentiles). There are no whiskers to make the plot more clear.
@@ -2279,7 +2631,7 @@ postplot_maxH2_lip_headPos <-
                linetype = "dashed", color = "grey", size = 1) + 
   theme_bw() +
   labs(x = "Posterior density", y = "Variable") +
-  scale_y_discrete(labels = c("Can size", "Head position", "Height", "Horizontal pos.", "Vowel")) #+ # Must be in alphabetical order
+  scale_y_discrete(labels = c("Can size", "Horizontal pos.", "Head position", "Height", "Vowel")) #+ # Must be in alphabetical order
   #scale_x_continuous(limits = c(-0.13, 0.01))
 
 postplot_maxH2_lip_headPos
