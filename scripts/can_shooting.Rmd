@@ -1250,10 +1250,11 @@ Change to report:
 summary(can$head_pos) # the unit is centimeters
 
 exp(fixef(mdl_maxH1_headPos))
+# This is giving the original scale for the intercept but odds for coefficients
 
 exp(fixef(mdl_maxH1_headPos)[1,1]) # intercept in Hz
-exp(fixef(mdl_maxH1_headPos)[4,1]) # estimate head_pos in Hz (positive)
-exp(fixef(mdl_maxH1_headPos)[2,1]) # estimate vowel_s in Hz (negative)
+(exp(fixef(mdl_maxH1_headPos)[1,1])*exp(fixef(mdl_maxH1_headPos)[4,1]))-exp(fixef(mdl_maxH1_headPos)[1,1]) # estimate head_pos in Hz (positive)
+(exp(fixef(mdl_maxH1_headPos)[1,1])*exp(fixef(mdl_maxH1_headPos)[2,1]))-exp(fixef(mdl_maxH1_headPos)[1,1]) # estimate vowel_s in Hz (negative)
 ```
 
 All hypotheses tested together:
@@ -1323,8 +1324,8 @@ summary(can$v_pos)
 exp(fixef(mdl_maxH1_vPos))
 
 exp(fixef(mdl_maxH1_vPos)[1,1]) # intercept in Hz
-exp(fixef(mdl_maxH1_vPos)[5,1]) # estimate v_pos in Hz (positive)
-exp(fixef(mdl_maxH1_vPos)[2,1]) # estimate vowel_s in Hz (negative)
+(exp(fixef(mdl_maxH1_vPos)[1,1])*exp(fixef(mdl_maxH1_vPos)[4,1]))-exp(fixef(mdl_maxH1_vPos)[1,1]) # estimate v_pos in Hz (positive)
+(exp(fixef(mdl_maxH1_vPos)[1,1])*exp(fixef(mdl_maxH1_vPos)[2,1]))-exp(fixef(mdl_maxH1_vPos)[1,1]) # estimate vowel_s in Hz (negative)
 ```
 
 All hypotheses tested together:
@@ -1405,6 +1406,19 @@ Having raw and posterior values, we can show the effects visually.
 
 Scatter plot with regression lines: *f*0 mean x head position
 
+Z-normalized
+
+```{r}
+ggplot(can, aes(x = head_pos_z, y = f0_mean_z, color = factor(vowel))) +
+    geom_point(alpha = 0.5) +
+    stat_smooth(method = "lm", se = TRUE) +
+    labs(color = "Vowel", x = "Head Position (z-normalized)", y = "f0 Mean (z-normalized)") +
+    theme_minimal() +
+    scale_color_manual(values = colorBlindBlack8)
+```
+
+Raw values
+
 ```{r}
 ggplot(can, aes(x = head_pos, y = f0_mean, color = factor(vowel))) +
     geom_point(alpha = 0.5) +
@@ -1414,7 +1428,120 @@ ggplot(can, aes(x = head_pos, y = f0_mean, color = factor(vowel))) +
     scale_color_manual(values = colorBlindBlack8)
 ```
 
-Posterior distribution
+There is a lot of individual differences between the speakers. E.g. 25 shows barely an effect for vowel and an opposite effect for size, especially striking in a; similarly 12 shows no effect for size and only a small for vowel; speakers 22 and 27 have a similar pattern of their behavior, in line also with 14 and 19.
+
+Let's see how the movers behave:
+
+```{r, warning=FALSE, message=FALSE}
+print(f0_vowel + 
+        facet_wrap(~mover) + 
+        theme_minimal())
+```
+
+
+
+```{r, warning=FALSE, message=FALSE}
+f0_head_pos <- ggplot(can,
+                   aes(x = head_pos_z,
+                       y = f0_mean_z,
+                       color = can_size)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(size = 1, 
+              method = lm, 
+              se = F) +
+  scale_color_manual(values=colorBlindBlack8) +
+  labs(x = "Head position (z-normalized)",
+       y = "F0 (z-normalized)",
+       color = "Can size")
+
+print(f0_head_pos + theme_bw() +
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 14,
+                                        face = "bold"),
+              legend.title = element_text(size = 14),
+              legend.text = element_text(size = 12)))
+
+# ggsave(filename = "F0-head.pdf",
+#        plot = last_plot(),
+#        width = 7, height = 4)
+```
+
+#### Mover
+
+```{r}
+f0_head_mover <- ggplot(can,
+       aes(x = head_pos_z,
+           y = f0_mean_z)) +
+    geom_point(alpha = 0.1) +
+    geom_smooth(method = lm,
+                size = 1,
+                se = F,
+                color = 'black') +
+    #color = "#00BFC4") +
+    facet_wrap(~mover, labeller = label_both) + 
+    labs(x = "Head position (z-normalized)",
+         y = "f0 mean (z-Normalized)")
+
+print(f0_head_mover + theme_bw() +
+        theme(strip.text.x = element_text(size = 12),
+              #strip.background = element_rect(fill = "#F8766D"),
+              axis.text = element_text(size = 12),
+              axis.title = element_text(size = 14,
+                                        face = "bold"),
+              legend.title = element_text(size = 14),
+              legend.text = element_text(size = 12)))
+
+# ggsave(filename = "F0-head-mover.pdf",
+#         plot = last_plot(),
+#         width = 7, height = 4)
+```
+
+#### F0 mean and vowel
+
+```{r}
+f0_vowel <- ggplot(can,
+       aes(y = f0_mean,
+           x = vowel,
+           color = can_size)) +
+    stat_summary(position = position_dodge(width = 0.5),
+                 size = 0.75) +
+    scale_color_manual(values=colorBlindBlack8)+
+    labs(x = "Vowel",
+         y = "F0 (z-normalized)",
+         color = "Can size")
+
+print(f0_vowel + 
+        theme_bw()+
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 16),
+              legend.title = element_text(size = 14),
+              legend.text = element_text(size = 12)))
+
+```
+
+The intrisic F0 difference between a and I is clearly visible with a having much lower F0 than I. Apart from that, we can see the effect of can size in both a and I, with large can yielding lower F0 than a small can.
+
+Now let's see how this relationship looks like in all possible vertical and horizontal positions. I'm creating a 5x5 grid
+
+```{r, warning=FALSE, message=FALSE}
+print(f0_vowel + 
+        facet_grid(v_pos~h_pos) + 
+        theme_minimal())
+```
+
+
+The a is always lower than the I, but we can see that here the relationship between small and large can size is sometimes flipped to the general tendency in the plot above.
+
+Let's have a look how the different speakers are behaving.
+
+```{r, warning=FALSE, message=FALSE}
+print(f0_vowel + 
+        facet_wrap(~speaker) + 
+        theme_minimal())
+```
+
+
+#### Posterior distribution
 
 ```{r}
 # Extracting posterior samples 
@@ -1453,9 +1580,37 @@ ggplot(can, aes(x = v_pos, y = f0_mean, color = factor(vowel))) +
 
 ```
 
+In the past research, the relationship between the vertical position and F0 was frequently pointed to as a robust one, especially in perception, but also in production. Let's see how it looks like in our data:
+
+```{r, warning=FALSE, message=FALSE}
+f0_vertical <- ggplot(can,
+                      aes(y = f0_mean_z,
+                          x = v_pos,
+                          color = can_size)) +
+  stat_summary(geom = 'line', 
+               fun = mean, 
+               position = position_dodge(width = 0.5), 
+               size = 2) +
+  stat_summary(position = position_dodge(width = 0.5), 
+               size = 1 ) + 
+  scale_color_manual(values=colorBlindBlack8) +
+  labs(x = "Vertical Position",
+       y = "F0 (z-normalized)",
+       color = "Can size") + 
+  theme_bw()+
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 16, 
+                                  face="bold"),
+              legend.title = element_text(size = 14),
+              legend.text = element_text(size = 12))
+
+f0_vertical
+
+# ggsave(plot = f0_vertical, filename = "F0-vertical.pdf", width = 7, height = 4)
+```
 
 
-Posterior distribution
+#### Posterior distribution
 
 ```{r}
 # Extracting posterior samples 
@@ -1993,17 +2148,78 @@ We would expect:
 First, let's look at the summary again.
 
 ```{r}
-summary(mdl_maxH1_headPos)
+summary(mdl_maxH2_lip_headPos)
 ```
 
-Now let's check the hypotheses using brms function.
+All hypotheses tested together:
 
 ```{r}
-hypothesis(mdl_maxH1_headPos, "vowel_s < 0")
-plot(hypothesis(mdl_maxH1_headPos, "vowel_s < 0"))
+hypothesis(mdl_maxH2_lip_headPos, c("vowel_s > 0", "head_pos > 0", "height < 0", "can_size_s > 0", "h_pos > 0"))
+plot(hypothesis(mdl_maxH1_headPos, c("vowel_s < 0", "head_pos > 0", "height < 0", "can_size_s < 0", "h_pos > 0")))
 ```
 
-The assumption holds for vowel: [i] has a higher means *f*0.
+A summary of the findings from the data, the priors, and the model:
+
+- vowel_s has a positive effect on lip_dist, such that from -0.5 [i], to 0.5 [a] the lip distance increases
+- head_pos has a positive effect on lip_dist, such that when head position increases, the lip distance increases
+- height has a negative effect on lip_dist such that taller participants generally have smaller lip distance
+- can_size_s has no meaningful effect -- our hypothesis is refuted
+- h_pos has no meaningful effect
+
+Change to report:
+
+```{r}
+summary(can$lip_dist) # the unit is centimeters
+
+exp(fixef(mdl_maxH2_lip_headPos))
+
+exp(fixef(mdl_maxH2_lip_headPos)[1,1]) # intercept in cm
+(exp(fixef(mdl_maxH2_lip_headPos)[1,1])*exp(fixef(mdl_maxH2_lip_headPos)[4,1]))-exp(fixef(mdl_maxH2_lip_headPos)[1,1]) # estimate head_pos in cm (positive), i.e., every 1 cm change in head_pos causes a change in lip_dist of
+(exp(fixef(mdl_maxH2_lip_headPos)[1,1])*exp(fixef(mdl_maxH2_lip_headPos)[2,1]))-exp(fixef(mdl_maxH2_lip_headPos)[1,1]) # estimate vowel_s in cm, i.e., difference between a and i is 50 mm
+```
+
+##### Vertical position
+
+We would expect:
+
+- vowel_s to have a positive effect on lip_dist, because -0.5 is [i], and 0.5 is [a], and [a] should have a larger lip distance being an open vowel
+- v_pos -- no expectation
+- height -- no expectation
+- can_size_s to have a negative effect on lip_dist, because -0.5 is small, and 0.5 is large, and our hypothesis says that iconically smaller object would yield smaller aperture
+- h_pos -- no expectation
+
+First, let's look at the summary again.
+
+```{r}
+summary(mdl_maxH2_lip_vPos)
+```
+
+All hypotheses tested together:
+
+```{r}
+hypothesis(mdl_maxH2_lip_vPos, c("vowel_s > 0", "v_pos < 0", "height < 0", "can_size_s > 0", "h_pos > 0"))
+plot(hypothesis(mdl_maxH2_lip_vPos, c("vowel_s < 0", "v_pos < 0", "height < 0", "can_size_s < 0", "h_pos > 0")))
+```
+
+A summary of the findings from the data, the priors, and the model:
+
+- vowel_s has a positive effect on lip_dist, such that from -0.5 [i], to 0.5 [a] the lip distance increases
+- v_pos has a negative effect on lip_dist, such that when the vertical position decreases, the lip distance decreases, too
+- height has no meaningful effect in this model!
+- can_size_s has no meaningful effect -- our hypothesis is refuted
+- h_pos has no meaningful effect
+
+Change to report:
+
+```{r}
+summary(can$lip_dist) # the unit is centimeters
+
+exp(fixef(mdl_maxH2_lip_vPos))
+
+exp(fixef(mdl_maxH2_lip_vPos)[1,1]) # intercept in cm
+(exp(fixef(mdl_maxH2_lip_vPos)[1,1])*exp(fixef(mdl_maxH2_lip_vPos)[4,1]))-exp(fixef(mdl_maxH2_lip_vPos)[1,1]) # estimate v_pos in cm (positive), i.e., every step change in v_pos causes a change in lip_dist of 3 mm
+(exp(fixef(mdl_maxH2_lip_vPos)[1,1])*exp(fixef(mdl_maxH2_lip_vPos)[2,1]))-exp(fixef(mdl_maxH2_lip_vPos)[1,1]) # estimate vowel_s in cm, i.e., difference between a and i is 50 mm
+```
 
 
 #### Plots
@@ -2046,6 +2262,49 @@ lip
 The lower and upper hinges correspond to the first and third quartiles (the 25th and 75th percentiles). There are no whiskers to make the plot more clear.
 
 The vowel does make a big difference, but the size has no effect.
+
+##### Posterior distribution
+
+```{r}
+# Extracting posterior samples 
+post_maxH2_lip_headPos <- mdl_maxH2_lip_headPos %>% 
+  gather_draws(b_vowel_s, b_can_size_s, b_head_pos, b_h_pos, b_height) 
+
+# Plotting intervals with densities
+postplot_maxH2_lip_headPos <- 
+  ggplot(post_maxH2_lip_headPos, 
+         aes(x = .value, y = .variable)) +
+  stat_halfeye(.width = 0.95, fill = colorBlindBlack8[2], alpha = 0.7, size = 2) +
+  geom_segment(x = 0, xend = 0, y = -Inf, yend = Inf,
+               linetype = "dashed", color = "grey", size = 1) + 
+  theme_bw() +
+  labs(x = "Posterior density", y = "Variable") +
+  scale_y_discrete(labels = c("Can size", "Head position", "Height", "Horizontal pos.", "Vowel")) #+ # Must be in alphabetical order
+  #scale_x_continuous(limits = c(-0.13, 0.01))
+
+postplot_maxH2_lip_headPos
+```
+
+
+```{r}
+# Extracting posterior samples 
+post_maxH2_lip_vPos <- mdl_maxH2_lip_vPos %>% 
+  gather_draws(b_vowel_s, b_can_size_s, b_v_pos, b_h_pos, b_height) 
+
+# Plotting intervals with densities
+postplot_maxH2_lip_vPos <- 
+  ggplot(post_maxH2_lip_vPos, 
+         aes(x = .value, y = .variable)) +
+  stat_halfeye(.width = 0.95, fill = colorBlindBlack8[2], alpha = 0.7, size = 2) +
+  geom_segment(x = 0, xend = 0, y = -Inf, yend = Inf,
+               linetype = "dashed", color = "grey", size = 1) + 
+  theme_bw() +
+  labs(x = "Posterior density", y = "Variable") +
+  scale_y_discrete(labels = c("Can size", "Height", "Horizontal pos.", "Vertical pos.", "Vowel")) #+ # Must be in alphabetical order
+  #scale_x_continuous(limits = c(-0.13, 0.01))
+
+postplot_maxH2_lip_vPos
+```
 
 
 ### Formant dispersion
@@ -2249,6 +2508,93 @@ mdl_maxH2_form_vPos_reloo
 ```
 
 #### Analysis of the models
+
+
+##### Head position
+
+We would expect:
+
+- vowel_s -- no expectation
+- head_pos -- no expectation
+- height -- no expectation
+- can_size_s to have a negative effect on f_disp, because -0.5 is small, and 0.5 is large, and our hypothesis says that iconically smaller object would yield smaller aperture
+- h_pos -- no expectation
+
+First, let's look at the summary again.
+
+```{r}
+summary(mdl_maxH2_form_headPos)
+```
+
+All hypotheses tested together:
+
+```{r}
+hypothesis(mdl_maxH2_form_headPos, c("vowel_s < 0", "head_pos > 0", "height < 0", "can_size_s > 0", "h_pos > 0"))
+plot(hypothesis(mdl_maxH2_form_headPos, c("vowel_s < 0", "head_pos > 0", "height < 0", "can_size_s < 0", "h_pos > 0")))
+```
+
+A summary of the findings from the data, the priors, and the model:
+
+- vowel_s has a negative effect on f_disp, such that from -0.5 [i], to 0.5 [a] the lip distance desreases
+- head_pos has no meaningful effect
+- height has no meaningful effect
+- can_size_s has no meaningful effect -- our hypothesis is refuted
+- h_pos has no meaningful effect
+
+Change to report:
+
+```{r}
+summary(can$f_disp) # the unit is Hz
+
+exp(fixef(mdl_maxH2_form_headPos))
+
+exp(fixef(mdl_maxH2_form_headPos)[1,1]) # intercept in Hz
+(exp(fixef(mdl_maxH2_form_headPos)[1,1])*exp(fixef(mdl_maxH2_form_headPos)[4,1]))-exp(fixef(mdl_maxH2_form_headPos)[1,1]) # estimate head_pos in Hz (positive), i.e., every 1 cm change in head_pos causes a change in formant dispersion of... (not reliable though)
+(exp(fixef(mdl_maxH2_form_headPos)[1,1])*exp(fixef(mdl_maxH2_form_headPos)[2,1]))-exp(fixef(mdl_maxH2_form_headPos)[1,1])  # estimate vowel_s in Hz (negative), i.e., the formant dispersion difference between a and i
+```
+
+##### Vertical position
+
+We would expect:
+
+- vowel_s to have a positive effect on lip_dist, because -0.5 is [i], and 0.5 is [a], and [a] should have a larger lip distance being an open vowel
+- v_pos -- no expectation
+- height -- no expectation
+- can_size_s to have a negative effect on lip_dist, because -0.5 is small, and 0.5 is large, and our hypothesis says that iconically smaller object would yield smaller aperture
+- h_pos -- no expectation
+
+First, let's look at the summary again.
+
+```{r}
+summary(mdl_maxH2_form_vPos)
+```
+
+All hypotheses tested together:
+
+```{r}
+hypothesis(mdl_maxH2_form_vPos, c("vowel_s < 0", "v_pos > 0", "height < 0", "can_size_s > 0", "h_pos > 0"))
+plot(hypothesis(mdl_maxH2_lip_vPos, c("vowel_s < 0", "v_pos < 0", "height < 0", "can_size_s < 0", "h_pos > 0")))
+```
+
+A summary of the findings from the data, the priors, and the model:
+
+- vowel_s has a positive effect on lip_dist, such that from -0.5 [i], to 0.5 [a] the lip distance increases
+- v_pos has a negative effect on lip_dist, such that when the vertical position decreases, the lip distance decreases, too
+- height has no meaningful effect in this model!
+- can_size_s has no meaningful effect -- our hypothesis is refuted
+- h_pos has no meaningful effect
+
+Change to report:
+
+```{r}
+summary(can$f_disp) # the unit is centimeters
+
+exp(fixef(mdl_maxH2_form_vPos))
+
+exp(fixef(mdl_maxH2_form_vPos)[1,1]) # intercept in cm
+(exp(fixef(mdl_maxH2_form_vPos)[1,1])*exp(fixef(mdl_maxH2_form_vPos)[4,1]))-exp(fixef(mdl_maxH2_form_vPos)[1,1]) # estimate head_pos in Hz (positive), i.e., every 1 cm change in head_pos causes a change in formant dispersion of... (not reliable though)
+(exp(fixef(mdl_maxH2_form_vPos)[1,1])*exp(fixef(mdl_maxH2_form_vPos)[2,1]))-exp(fixef(mdl_maxH2_form_vPos)[1,1])  # estimate vowel_s in Hz (negative), i.e., the formant dispersion difference between a and i
+```
 
 
 #### Plots
