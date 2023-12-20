@@ -2010,156 +2010,104 @@ formants_i_small <- can %>%
 
 ### Vowel a and size large
 
-Plot object
-
 ```{r}
+# Plot object
 area_a_large = ggplot(formants_a_large,
             aes(y = F1,
                 x = F2)) +
   geom_point() +
   stat_ellipse(segments = 201) # Default is 51. We use a finer grid for more accurate area.
-```
 
-Get ellipse coordinates from plot
-
-```{r}
+# Get ellipse coordinates from plot
 pb = ggplot_build(area_a_large)
 el = pb$data[[2]][c("x", "y")]
-```
 
-Center of ellipse
-
-```{r}
+# Center of ellipse
 ctr = MASS::cov.trob(el)$center  # Per @Roland's comment
-```
 
-Calculate distance to center from each point on the ellipse
-
-```{r}
+# Calculate distance to center from each point on the ellipse
 dist2center <- sqrt(rowSums((t(t(el) - ctr))^2))
-```
 
-Calculate area of ellipse from semi-major and semi-minor axes. 
-These are, respectively, the largest and smallest values of dist2center. 
-
-```{r}
+# Calculate area of ellipse from semi-major and semi-minor axes. 
+# These are, respectively, the largest and smallest values of dist2center. 
 area_a_large <- pi*min(dist2center)*max(dist2center)
 area_a_large
 ```
 
 ### Vowel a and size small
 
-Plot object
-
 ```{r}
+# Plot object
 area_a_small = ggplot(formants_a_small,
             aes(y = F1,
                 x = F2)) +
   geom_point() +
   stat_ellipse(segments = 201) # Default is 51. We use a finer grid for more accurate area.
-```
 
-Get ellipse coordinates from plot
-
-```{r}
+# Get ellipse coordinates from plot
 pb = ggplot_build(area_a_small)
 el = pb$data[[2]][c("x", "y")]
-```
 
-Center of ellipse
-
-```{r}
+# Center of ellipse
 ctr = MASS::cov.trob(el)$center  # Per @Roland's comment
-```
 
-Calculate distance to center from each point on the ellipse
-
-```{r}
+# Calculate distance to center from each point on the ellipse
 dist2center <- sqrt(rowSums((t(t(el) - ctr))^2))
-```
 
-Calculate area of ellipse from semi-major and semi-minor axes. 
-These are, respectively, the largest and smallest values of dist2center. 
-
-```{r}
+# Calculate area of ellipse from semi-major and semi-minor axes. 
+# These are, respectively, the largest and smallest values of dist2center. 
 area_a_small <- pi*min(dist2center)*max(dist2center)
 area_a_small
 ```
 
 ### Vowel i and size large
 
-Plot object
-
 ```{r}
+# Plot object
 area_i_large = ggplot(formants_i_large,
             aes(y = F1,
                 x = F2)) +
   geom_point() +
   stat_ellipse(segments = 201) # Default is 51. We use a finer grid for more accurate area.
-```
 
-Get ellipse coordinates from plot
-
-```{r}
+# Get ellipse coordinates from plot
 pb = ggplot_build(area_i_large)
 el = pb$data[[2]][c("x", "y")]
-```
 
-Center of ellipse
-
-```{r}
+# Center of ellipse
 ctr = MASS::cov.trob(el)$center  # Per @Roland's comment
-```
 
-Calculate distance to center from each point on the ellipse
-
-```{r}
+# Calculate distance to center from each point on the ellipse
 dist2center <- sqrt(rowSums((t(t(el) - ctr))^2))
-```
 
-Calculate area of ellipse from semi-major and semi-minor axes. 
-These are, respectively, the largest and smallest values of dist2center. 
-
-```{r}
+# Calculate area of ellipse from semi-major and semi-minor axes. 
+# These are, respectively, the largest and smallest values of dist2center. 
 area_i_large <- pi*min(dist2center)*max(dist2center)
 area_i_large
 ```
 
 ### Vowel i and size small
 
-Plot object
-
 ```{r}
+# Plot object
 area_i_small = ggplot(formants_i_small,
             aes(y = F1,
                 x = F2)) +
   geom_point() +
   stat_ellipse(segments = 201) # Default is 51. We use a finer grid for more accurate area.
-```
 
-Get ellipse coordinates from plot
-
-```{r}
+# Get ellipse coordinates from plot
 pb = ggplot_build(area_i_small)
 el = pb$data[[2]][c("x", "y")]
-```
 
-Center of ellipse
-
-```{r}
+# Center of ellipse
 ctr = MASS::cov.trob(el)$center  # Per @Roland's comment
-```
 
-Calculate distance to center from each point on the ellipse
-
-```{r}
+# Calculate distance to center from each point on the ellipse
 dist2center <- sqrt(rowSums((t(t(el) - ctr))^2))
-```
 
-Calculate area of ellipse from semi-major and semi-minor axes. 
-These are, respectively, the largest and smallest values of dist2center. 
-
-```{r}
+# Calculate area of ellipse from semi-major and semi-minor axes. 
+# These are, respectively, the largest and smallest values of dist2center. 
 area_i_small <- pi*min(dist2center)*max(dist2center)
 area_i_small
 ```
@@ -2234,7 +2182,6 @@ ggplot(can,
 Very highly correlated, as expected. Let's see about the formant dispersion, as suggested by one of the reviewers.
 
 ## Jaw opening vs. formant dispersion
-
 
 ```{r}
 cor.test(can$lip_dist, can$f_disp)
@@ -2364,7 +2311,7 @@ mdl_maxH2_lip_headPos <- brm(lip_dist ~
 
 mdl_maxH2_lip_headPos <- readRDS(paste0(models, "mdl_maxH2_lip_headPos.rds"))
 
-beepr::beep()
+# beepr::beep()
 ```
 
 Let's check how it looks like.
@@ -2444,7 +2391,7 @@ mdl_maxH2_lip_vPos <- brm(lip_dist ~ 1 + vowel_s + can_size_s +
 
 mdl_maxH2_lip_vPos <- readRDS(paste0(models, "mdl_maxH2_lip_vPos.rds"))
 
-beepr::beep()
+# beepr::beep()
 ```
 
 Let's check how it looks like.
@@ -2574,7 +2521,6 @@ exp(fixef(mdl_maxH2_lip_vPos)[1,1]) # intercept in cm
 
 #### Plots
 
-
 ##### Jaw opening (old)
 
 Let's see what's the relationship between size and jaw opening:
@@ -2617,6 +2563,8 @@ The vowel does make a big difference, but the size has no effect.
 
 ##### Posterior distribution
 
+Head position model:
+
 ```{r}
 # Extracting posterior samples 
 post_maxH2_lip_headPos <- mdl_maxH2_lip_headPos %>% 
@@ -2634,9 +2582,17 @@ postplot_maxH2_lip_headPos <-
   scale_y_discrete(labels = c("Can size", "Horizontal pos.", "Head position", "Height", "Vowel")) #+ # Must be in alphabetical order
   #scale_x_continuous(limits = c(-0.13, 0.01))
 
-postplot_maxH2_lip_headPos
+print(postplot_maxH2_lip_headPos +
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 14,
+                                        face = "bold")))
+
+# ggsave(filename = paste0(plots, "postplot_maxH2_lip_headPos.pdf"),
+#        plot = last_plot(),
+#        width = 10, height = 8)
 ```
 
+Vertical position model:
 
 ```{r}
 # Extracting posterior samples 
@@ -2652,10 +2608,17 @@ postplot_maxH2_lip_vPos <-
                linetype = "dashed", color = "grey", size = 1) + 
   theme_bw() +
   labs(x = "Posterior density", y = "Variable") +
-  scale_y_discrete(labels = c("Can size", "Height", "Horizontal pos.", "Vertical pos.", "Vowel")) #+ # Must be in alphabetical order
+  scale_y_discrete(labels = c("Can size", "Horizontal pos.", "Height", "Vertical pos.", "Vowel")) #+ # Must be in alphabetical order
   #scale_x_continuous(limits = c(-0.13, 0.01))
 
-postplot_maxH2_lip_vPos
+print(postplot_maxH2_lip_vPos +
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 14,
+                                        face = "bold")))
+
+# ggsave(filename = paste0(plots, "postplot_maxH2_lip_vPos.pdf"),
+#        plot = last_plot(),
+#        width = 10, height = 8)
 ```
 
 
