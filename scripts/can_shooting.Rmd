@@ -58,6 +58,16 @@ colorBlindBlack8  <- c("#000000", "#E69F00", "#56B4E9", "#009E73",
                        "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 ```
 
+Check versions:
+
+```{r}
+R.Version()$version.string
+
+packageVersion("tidyverse")
+packageVersion("ggplot2")
+packageVersion("brms")
+```
+
 Load data:
 
 ```{r load data, message=FALSE, warning=FALSE}
@@ -172,7 +182,7 @@ can <- can %>%
     y_mg_mean = y_mg_mean*100
     ) %>%
   select(
-    subject, part, size, v.pos, h.pos, text, start, duration, 
+    subject, age, hand, monolingual, part, size, v.pos, h.pos, text, start, duration, 
     overall_dB, f0_range, mean_f0, X50_F1, X50_F2, X50_F3, 
     height, dataset, y_mg_mean, LipDist, angle.c7.3d
     ) %>%
@@ -631,6 +641,33 @@ Check means of kinematic variables per speaker:
 ```{r}
 print(speakers_kin, n = 60)
 ```
+
+Check age:
+
+```{r}
+summary(can$age)
+```
+
+Check height:
+
+```{r}
+summary(can$height)
+```
+
+Check monolingual:
+
+```{r}
+summary(as.factor(can$monolingual))
+# meaning 5 bilingual, 25 monolingual
+```
+
+Check handedness:
+
+```{r}
+summary(as.factor(can$hand))
+# meaning 1 left, 29 right
+```
+
 
 # Export dataset
 
@@ -1255,6 +1292,7 @@ exp(fixef(mdl_maxH1_headPos))
 exp(fixef(mdl_maxH1_headPos)[1,1]) # intercept in Hz
 (exp(fixef(mdl_maxH1_headPos)[1,1])*exp(fixef(mdl_maxH1_headPos)[4,1]))-exp(fixef(mdl_maxH1_headPos)[1,1]) # estimate head_pos in Hz (positive)
 (exp(fixef(mdl_maxH1_headPos)[1,1])*exp(fixef(mdl_maxH1_headPos)[2,1]))-exp(fixef(mdl_maxH1_headPos)[1,1]) # estimate vowel_s in Hz (negative)
+(exp(fixef(mdl_maxH1_headPos)[1,1])*exp(fixef(mdl_maxH1_headPos)[6,1]))-exp(fixef(mdl_maxH1_headPos)[1,1]) # estimate height in Hz (positive)
 ```
 
 All hypotheses tested together:
@@ -1347,6 +1385,7 @@ can %>%
   group_by(speaker) %>%
   summarize(head_range = max(head_pos, na.rm = TRUE) - min(head_pos, na.rm = TRUE)) %>%
   ungroup() %>%
+  arrange(desc(head_range)) %>% 
   {. ->> head_range} %>%
   print(n = 30)
 ```
@@ -1354,9 +1393,9 @@ can %>%
 Given the various head movement behavior, we can also expect big inter-speaker variance.
 
 ```{r}
-# brmstools::forest(mdl_maxH1_headPos, 
-#                   grouping = "speaker", 
-#                   pars = "head_pos", 
+# brmstools::forest(mdl_maxH1_headPos,
+#                   grouping = "speaker",
+#                   pars = "head_pos",
 #                   digits = 0,
 #                   sort = T)
 
@@ -2472,7 +2511,8 @@ exp(fixef(mdl_maxH2_lip_headPos))
 
 exp(fixef(mdl_maxH2_lip_headPos)[1,1]) # intercept in cm
 (exp(fixef(mdl_maxH2_lip_headPos)[1,1])*exp(fixef(mdl_maxH2_lip_headPos)[4,1]))-exp(fixef(mdl_maxH2_lip_headPos)[1,1]) # estimate head_pos in cm (positive), i.e., every 1 cm change in head_pos causes a change in lip_dist of
-(exp(fixef(mdl_maxH2_lip_headPos)[1,1])*exp(fixef(mdl_maxH2_lip_headPos)[2,1]))-exp(fixef(mdl_maxH2_lip_headPos)[1,1]) # estimate vowel_s in cm, i.e., difference between a and i is 50 mm
+(exp(fixef(mdl_maxH2_lip_headPos)[1,1])*exp(fixef(mdl_maxH2_lip_headPos)[2,1]))-exp(fixef(mdl_maxH2_lip_headPos)[1,1]) # estimate vowel_s in cm, i.e., difference between a and i is 5 mm
+(exp(fixef(mdl_maxH2_lip_headPos)[1,1])*exp(fixef(mdl_maxH2_lip_headPos)[6,1]))-exp(fixef(mdl_maxH2_lip_headPos)[1,1]) # estimate height in cm, i.e., every 1 cm change in height causes a change in lip_dist of
 ```
 
 ##### Vertical position
@@ -2514,8 +2554,8 @@ summary(can$lip_dist) # the unit is centimeters
 exp(fixef(mdl_maxH2_lip_vPos))
 
 exp(fixef(mdl_maxH2_lip_vPos)[1,1]) # intercept in cm
-(exp(fixef(mdl_maxH2_lip_vPos)[1,1])*exp(fixef(mdl_maxH2_lip_vPos)[4,1]))-exp(fixef(mdl_maxH2_lip_vPos)[1,1]) # estimate v_pos in cm (positive), i.e., every step change in v_pos causes a change in lip_dist of 3 mm
-(exp(fixef(mdl_maxH2_lip_vPos)[1,1])*exp(fixef(mdl_maxH2_lip_vPos)[2,1]))-exp(fixef(mdl_maxH2_lip_vPos)[1,1]) # estimate vowel_s in cm, i.e., difference between a and i is 50 mm
+(exp(fixef(mdl_maxH2_lip_vPos)[1,1])*exp(fixef(mdl_maxH2_lip_vPos)[4,1]))-exp(fixef(mdl_maxH2_lip_vPos)[1,1]) # estimate v_pos in cm (positive), i.e., every step change in v_pos causes a change in lip_dist of 0.03 mm
+(exp(fixef(mdl_maxH2_lip_vPos)[1,1])*exp(fixef(mdl_maxH2_lip_vPos)[2,1]))-exp(fixef(mdl_maxH2_lip_vPos)[1,1]) # estimate vowel_s in cm, i.e., difference between a and i is 5.1 mm
 ```
 
 
