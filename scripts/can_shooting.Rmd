@@ -1,7 +1,7 @@
 ---
 title: "Exploring Iconic Prosody and Sensorimotor Properties"
-author: "Aleksandra Ćwiek & Susanne Fuchs"
-date: "2023-12-04"
+author: "anonymized for review"
+date: "2024-11-20"
 output:
   html_document:
     number_sections: yes
@@ -42,7 +42,8 @@ scripts       <- paste0(parentfolder, '/scripts/')
 # Load in packages
 library(tidyverse) # data wrangling
 library(gridExtra) # plots side by side
-library(iemisc) # for acosd, which gives inverse cosine in degrees (standard in R is radians)
+#library(iemisc) # for acos_d, which gives inverse cosine in degrees (standard in R is radians) # since 07.2024 not on CRAN
+library(aspace) # alternative to iemisc
 library(broom) # for tidy model outputs
 library(brms)
 # option for Bayesian regression models:
@@ -168,9 +169,9 @@ Calculate angles in 3D:
 
 ```{r angles, echo=TRUE, message=FALSE, warning=FALSE}
 can <- mutate(can,
-              angle.mg.3d = acosd((dist.c7.mg.3d^2 + dist.mg.f.3d^2 - dist.f.c7.3d^2) / (2 * dist.c7.mg.3d * dist.mg.f.3d)), # mid glasses
-              angle.f.3d = acosd((dist.mg.f.3d^2 + dist.f.c7.3d^2 - dist.c7.mg.3d^2) / (2 * dist.mg.f.3d * dist.f.c7.3d)), # front
-              angle.c7.3d = acosd((dist.f.c7.3d^2 + dist.c7.mg.3d^2 - dist.mg.f.3d^2) / (2 * dist.f.c7.3d * dist.c7.mg.3d))) # back -- I use this one as this is the most stable point on the body
+              angle.mg.3d = acos_d((dist.c7.mg.3d^2 + dist.mg.f.3d^2 - dist.f.c7.3d^2) / (2 * dist.c7.mg.3d * dist.mg.f.3d)), # mid glasses
+              angle.f.3d = acos_d((dist.mg.f.3d^2 + dist.f.c7.3d^2 - dist.c7.mg.3d^2) / (2 * dist.mg.f.3d * dist.f.c7.3d)), # front
+              angle.c7.3d = acos_d((dist.f.c7.3d^2 + dist.c7.mg.3d^2 - dist.mg.f.3d^2) / (2 * dist.f.c7.3d * dist.c7.mg.3d))) # back -- I use this one as this is the most stable point on the body
 ```
 
 Select only necessary columns and rename them:
@@ -610,7 +611,7 @@ How many unique realizations per speaker?
 ```{r}
 can %>%
   group_by(speaker) %>%
-  summarize(num_unique_realizations = n_distinct(paste(can_size, v_pos, h_pos, vowel))) %>%
+  dplyr::summarize(num_unique_realizations = n_distinct(paste(can_size, v_pos, h_pos, vowel))) %>%
   ungroup() %>%
   print(n = 30)
 ```
@@ -620,7 +621,7 @@ NAs in variables per speaker.
 ```{r}
 can %>%
   group_by(speaker) %>%
-  summarize(
+  mutate(
     across(c(dB_mean, f0_mean, f0_range, F1, F2, F3, head_pos, lip_dist, angle),
            ~sum(is.na(.))),
     .groups = 'drop'
@@ -1383,7 +1384,7 @@ Taken together, we see that in both models, vowel has a reliable effect, which i
 ```{r}
 can %>%
   group_by(speaker) %>%
-  summarize(head_range = max(head_pos, na.rm = TRUE) - min(head_pos, na.rm = TRUE)) %>%
+  dplyr::summarize(head_range = max(head_pos, na.rm = TRUE) - min(head_pos, na.rm = TRUE)) %>%
   ungroup() %>%
   arrange(desc(head_range)) %>% 
   {. ->> head_range} %>%
@@ -2156,10 +2157,10 @@ area_i_small
 Create tibble from areas
 
 ```{r}
-areas <- tribble(
-  ~size_large, ~size_small,
-  area_a_large, area_a_small,
-  area_i_large, area_i_small)
+areas <- tibble(
+  size_large = c(area_a_large, area_i_large),
+  size_small = c(area_a_small, area_i_small)
+)
 ```
 
 And run a t.test on areas
@@ -2192,7 +2193,7 @@ Let's have a look.
 ```{r}
 can %>%
   group_by(speaker, vowel) %>%
-  summarize(mean_f_disp = mean(f_disp, na.rm = TRUE)) %>%
+  dplyr::summarize(mean_f_disp = mean(f_disp, na.rm = TRUE)) %>%
   ungroup() %>%
   print(n = Inf)
 ```
@@ -3121,3 +3122,7 @@ p_fDisp_vowel_size
 ```
 
 The vowel makes a big difference, but the formant dispersion doesn't seem to make any.
+
+# END
+
+This concludes the analysis.

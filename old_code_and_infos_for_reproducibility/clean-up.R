@@ -2,7 +2,7 @@
 ## Date: August 2018
 
 ## Data clean-up
-## Script by Aleksandra Cwiek
+## Script by *anonymized for review*
 
 rm(list=ls());cat("\014") 
 
